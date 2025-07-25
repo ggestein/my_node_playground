@@ -15,9 +15,15 @@ class C {
         this.idx = idx
         this.data = data
     }
-    get(name) {
+    g(name) {
         const fi = this.belongNamedEnum.getField(name)
         return this.data[fi[0]]
+    }
+    e() {
+        return this.belongNamedEnum
+    }
+    i() {
+        return this.idx
     }
 }
 
@@ -49,9 +55,60 @@ class NE {
 }
 
 class P {
-    constructor(sground, sgraph) {
+    constructor(ctx, sground, sgraph) {
+        this.ctx = ctx
         this.sground = sground
         this.sgraph = sgraph
+    }
+
+    total_situation_count() {
+        return this.sground.__main__.length
+    }
+
+    get_situation(id) {
+        if (id < 0 && id >= this.sground.__main__.length) {
+            return null
+        }
+        return this.sground.__main__[id]
+    }
+
+    query_situation(fn) {
+        let sl = []
+        try {
+            const m = this.sground.__main__
+            for (let i = 0; i < m.length; i++) {
+                const cs = m[i]
+                if (fn(this.ctx, m[i])) {
+                    sl.push(i)
+                }
+            }
+        } catch (err) {
+            return [false, err]
+        }
+        return [true, sl]
+    }
+
+    get_valid_input(id) {
+        const m = this.sgraph[id]
+        if (m === undefined) {
+            return null
+        }
+        let r = []
+        for (let [k, v] in m) {
+            r.push(k)
+        }
+        return r
+    }
+    get_move_target(id, input) {
+        const m = this.sgraph[id]
+        if (m === undefined) {
+            return null
+        }
+        const t = m.get(input)
+        if (t === undefined) {
+            return null
+        }
+        return t
     }
     dump() {
         const l = console.log
@@ -235,18 +292,12 @@ export default class PB {
     build() {
         const l = console.log
         l("[BUILD] BEGIN")
-        l(`this.raw_enums.length = ${this.raw_enums.length}`)
         let sground = new Object()
         for (let i = 0; i < this.raw_enums.length; i++) {
-            l(`[${i}]`)
-            l(this.raw_enums[i])
             let ne = parseNE(this.raw_enums[i])
             sground[ne.name] = ne
         }
-        l(`this.raw_structs.length = ${this.raw_structs.length}`)
         for (let i = 0; i < this.raw_structs.length; i++) {
-            l(`[${i}]`)
-            l(this.raw_structs[i])
             let se = parseSE(sground, this.raw_structs[i])
             sground[se.name] = se
         }
@@ -277,7 +328,7 @@ export default class PB {
             }
             sgraph.set(i0, adj)
         }
-        let p = new P(sground, sgraph)
+        let p = new P(ctx, sground, sgraph)
         l("[BUILD] END")
         return p
     }
