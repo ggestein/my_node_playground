@@ -6,6 +6,7 @@ try {
     pb.append_enum([
 
     ["test_enum_0", "name", "desc"        , "price"],
+                  [ "str" , "str"         , "num"  ],
     //-----------------------------------------------
     [0            , "John", "This is John", 100    ],
     [1            , "Tom" , "Tom desu"    , 150    ],
@@ -14,10 +15,11 @@ try {
 
     pb.append_enum([
 
-    ["test_enum_1", "from", "to"],
+    ["test_enum_1", "from", "to" ],
+                  [ "hum" , "num"],
     //-----------------------------------------------
-    [0            , 10    , 20  ],
-    [1            , 20    , 30  ],
+    [0            , 10    , 20   ],
+    [1            , 20    , 30   ],
 
     ])
 
@@ -32,8 +34,12 @@ try {
 
     ])
 
-    pb.build()
+    pb.set_prefilter((s) => true)
+
+    pb.append_rule((s0, s1) => true, 1)
+
+    let p = pb.build()
+    p.dump()
 } catch(err) {
-    console.log(`ERR_NAME: ${err.name}`)
-    console.log(`ERR_MESSAGE: ${err.message}`)
+    console.log(err)
 }
