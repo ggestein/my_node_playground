@@ -1,4 +1,4 @@
-import {PB} from "./pb.js"
+import PB from "./pb.js"
 
 try {
     let pb = new PB()

@@ -89,7 +89,7 @@ const parseSE = (l) => {
     return ne
 }
 
-export class PB {
+export default class PB {
     constructor() {
         this.raw_enums = []
         this.raw_structs = []
