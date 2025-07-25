@@ -17,6 +17,9 @@ class C {
     }
     g(name) {
         const fi = this.belongNamedEnum.getField(name)
+        if (fi === undefined) {
+            throw new Error(` ===== No field [${name}] in [${this.belongNamedEnum.name}]`)
+        }
         return this.data[fi[0]]
     }
     e() {
@@ -40,7 +43,7 @@ class NE {
         if (i >= 0 && i < this.cs.length) {
             return this.cs[i]
         }
-        return null
+        throw new Error(` ===== Index [${i}] over range for [${this.name}](0 ~ ${this.cs.length})`)
     }
     getField(name) {
         return this.fi.get(name)
@@ -194,9 +197,19 @@ const parseSE = (sground, l) => {
             rfs.push(tne)
             ne.appendFI(fin, [fp, TYPE_S2I.get("ref"), tne])
         } else {
-            const seg = k.split("~")
-            const fr = +seg[0]
-            const to = +seg[1]
+            let seg = k.split("~")
+            let fr = null
+            let to = null
+            if (seg.length == 2) {
+                fr = +seg[0]
+                to = +seg[1]
+            } else {
+                seg = k.split(";")
+                if (seg.length == 2) {
+                    fr = +seg[0]
+                    to = fr + (+seg[1]) - 1
+                }
+            }
             rfs.push([fr, to])
             ne.appendFI(fin, [fp, TYPE_S2I.get("rge"), fr, to])
         }
@@ -224,7 +237,7 @@ const parseSE = (sground, l) => {
             if (t instanceof NE) {
                 c = t.count()
             } else {
-                c = t[1] - t[0]
+                c = t[1] - t[0] + 1
             }
             if (nx >= c) {
                 cns[i] = 0
