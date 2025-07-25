@@ -56,7 +56,12 @@ class P {
     dump() {
         const l = console.log
         l("===================================")
+        let ms = null
         for (let k in this.sground) {
+            if (k == "__main__") {
+                ms = this.sground[k]
+                continue
+            }
             l(`[${k}]`)
             const v = this.sground[k]
             const count = v.count()
@@ -77,6 +82,17 @@ class P {
                     }
                     l(`   ${fik}: ${cv}(${tn})`)
                 }
+            }
+        }
+        l("==== MAIN ====")
+        for (let i = 0; i < ms.length; i++) {
+            l(`[${ms[i].belongNamedEnum.name}:${ms[i].idx}]`)
+        }
+        l("==== GRAPH ====")
+        for (let [k0, v0] of this.sgraph) {
+            l(`[${k0}]`)
+            for (let [k1, v1] of v0) {
+                l(` - ${k1} -> ${v1}`)
             }
         }
     }
@@ -168,8 +184,26 @@ const parseSE = (sground, l) => {
     return ne
 }
 
+class CTX {
+    constructor(sground) {
+        this.sg = sground
+    }
+
+    get_enum(name) {
+        return this.sg[name]
+    }
+
+    eq(v0, v1) {
+        if (v0 instanceof C && v1 instanceof C) {
+            return v0.belongNamedEnum === v1.belongNamedEnum && v0.idx == v1.idx
+        }
+        return v0 === v1
+    }
+}
+
 export default class PB {
     constructor() {
+        this.main = null
         this.raw_enums = []
         this.raw_structs = []
         this.prefilter = function(s) {
@@ -184,6 +218,10 @@ export default class PB {
     
     append_struct(arg) {
         this.raw_structs.push(arg)
+    }
+
+    set_main(m) {
+        this.main = m
     }
 
     set_prefilter(sq) {
@@ -212,7 +250,33 @@ export default class PB {
             let se = parseSE(sground, this.raw_structs[i])
             sground[se.name] = se
         }
+        const ctx = new CTX(sground)
+        const mne = sground[this.main]
+        let sl = []
+        for (let i = 0; i < mne.count(); i++) {
+            const cc = mne.get(i)
+            if (this.prefilter(ctx, mne.get(i))) {
+                sl.push(cc)
+            }
+        }
+        sground.__main__ = sl
         let sgraph = new Map()
+        for (let i0 = 0; i0 < sl.length; i0++) {
+            let adj = new Map()
+            for (let i1 = 0; i1 < sl.length; i1++) {
+                if (i0 == i1) {
+                    continue;
+                }
+                const s0 = sl[i0]
+                const s1 = sl[i1]
+                for (let ir = 0; ir < this.rules.length; ir++) {
+                    if (this.rules[ir][0](ctx, s0, s1)) {
+                        adj.set(i0, [this.rules[ir][1], i1])
+                    }
+                }
+            }
+            sgraph.set(i0, adj)
+        }
         let p = new P(sground, sgraph)
         l("[BUILD] END")
         return p

@@ -34,9 +34,10 @@ try {
 
     ])
 
-    pb.set_prefilter((s) => true)
+    pb.set_main("test_enum_1")
+    pb.set_prefilter((ctx, s) => true)
 
-    pb.append_rule((s0, s1) => true, 1)
+    pb.append_rule((ctx, s0, s1) => true, 1, "first rule")
 
     let p = pb.build()
     p.dump()
