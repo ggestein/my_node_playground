@@ -3,19 +3,10 @@ TYPE_I2S.set(0, "num")
 TYPE_I2S.set(1, "str")
 TYPE_I2S.set(2, "bol")
 TYPE_I2S.set(3, "ref")
+TYPE_I2S.set(4, "rge")
 const TYPE_S2I = new Map()
 for (const [k, v] of TYPE_I2S) {
     TYPE_S2I.set(v, k)
-}
-
-// test
-console.log("TYPE_I2S:")
-for (const [k, v] of TYPE_I2S) {
-    console.log(k, v)
-}
-console.log("TYPE_S2I:")
-for (const [k, v] of TYPE_S2I) {
-    console.log(k, v)
 }
 
 class C {
@@ -25,7 +16,8 @@ class C {
         this.data = data
     }
     get(name) {
-        return this.data[this.belongNamedEnum.getField(name)[0]]
+        const fi = this.belongNamedEnum.getField(name)
+        return this.data[fi[0]]
     }
 }
 
@@ -40,15 +32,15 @@ class NE {
     }
     get(i) {
         if (i >= 0 && i < this.cs.length) {
-            return cs[i]
+            return this.cs[i]
         }
         return null
     }
     getField(name) {
-        return fi.get(name)
+        return this.fi.get(name)
     }
     appendFI(name, info) {
-        fi.set(name, info)
+        this.fi.set(name, info)
     }
     appendC(data) {
         let c = new C(this, this.cs.length, data)
@@ -62,7 +54,31 @@ class P {
         this.sgraph = sgraph
     }
     dump() {
-        console.log("I AM DUMPED")
+        const l = console.log
+        l("===================================")
+        for (let k in this.sground) {
+            l(`[${k}]`)
+            const v = this.sground[k]
+            const count = v.count()
+            l(`count: ${count}`)
+            for (let i = 0; i < count; i++) {
+                const c = v.get(i)
+                l(` - [${c.idx}](${c.belongNamedEnum.name})`)
+                for (let [fik, fiv] of c.belongNamedEnum.fi) {
+                    let tn = TYPE_I2S.get(fiv[1])
+                    let cv = c.get(fik)
+                    if (cv instanceof C) {
+                        cv = `[${cv.belongNamedEnum.name}:${cv.idx}]`
+                    }
+                    if (tn == "rge") {
+                        tn = `rge: ${fiv[2]} ~ ${fiv[3]}`
+                    } else if (tn == "ref") {
+                        tn = `ref -> [${fiv[2].name}]`
+                    }
+                    l(`   ${fik}: ${cv}(${tn})`)
+                }
+            }
+        }
     }
 }
 
@@ -74,18 +90,81 @@ class EnumFormatError extends Error {
     }
 }
 
-const parseC = (l) => {
-    let c = new C()
-    return c
-}
-
 const parseNE = (l) => {
-    let ne = new NE()
+    let h = l[0]
+    let name = h[0]
+    let ne = new NE(name)
+    let tl = l[1]
+    for (let i = 1; i < h.length; i++) {
+        const fp = i - 1
+        ne.appendFI(h[i], [fp, TYPE_S2I.get(tl[fp])])
+    }
+    for (let i = 2; i < l.length; i++) {
+        let d = []
+        for (let j = 1; j < l[i].length; j++) {
+            d.push(l[i][j])
+        }
+        ne.appendC(d)
+    }
     return ne
 }
 
-const parseSE = (l) => {
-    let ne = new NE()
+const parseSE = (sground, l) => {
+    let ne = new NE(l[0])
+    let rfs = []
+    for (let i = 1; i < l.length; i++) {
+        const fin = l[i][0]
+        const k = l[i][1]
+        const tne = sground[k]
+        const fp = i - 1
+        if (tne !== undefined) {
+            rfs.push(tne)
+            ne.appendFI(fin, [fp, TYPE_S2I.get("ref"), tne])
+        } else {
+            const seg = k.split("~")
+            const fr = +seg[0]
+            const to = +seg[1]
+            rfs.push([fr, to])
+            ne.appendFI(fin, [fp, TYPE_S2I.get("rge"), fr, to])
+        }
+    }
+    let cns = []
+    for (let i = 0; i < rfs.length; i++) {
+        cns.push(0)
+    }
+    while (true) {
+        const d = []
+        for (let i = 0; i < rfs.length; i++) {
+            const t = rfs[i]
+            if (t instanceof NE) {
+                d.push(t.get(cns[i]))
+            } else {
+                d.push(t[0] + cns[i])
+            }
+        }
+        ne.appendC(d)
+        let end = true
+        for (let i = 0; i < rfs.length; i++) {
+            const nx = cns[i] + 1
+            const t = rfs[i]
+            let c = 0
+            if (t instanceof NE) {
+                c = t.count()
+            } else {
+                c = t[1] - t[0]
+            }
+            if (nx >= c) {
+                cns[i] = 0
+            } else {
+                cns[i] = nx
+                end = false
+                break
+            }
+        }
+        if (end) {
+            break
+        }
+    }
     return ne
 }
 
@@ -130,7 +209,7 @@ export default class PB {
         for (let i = 0; i < this.raw_structs.length; i++) {
             l(`[${i}]`)
             l(this.raw_structs[i])
-            let se = parseSE(this.raw_structs[i])
+            let se = parseSE(sground, this.raw_structs[i])
             sground[se.name] = se
         }
         let sgraph = new Map()
