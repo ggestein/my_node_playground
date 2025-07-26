@@ -35,28 +35,43 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
 const skb = new SKB()
-let [result, p] = skb.build(lv1.build)
+let [result, p] = skb.build(lv1)
 if (result) {
     l("SUCCESS TO BUILD")
     let pg = null
     let sd = new SD(ctx, canvas.width, canvas.height)
     const drawFunc = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = "#000000"
+        ctx.fillStyle = "#181818"
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         if (pg != null) {
-            sd.draw(pg.cur_sdata())
+            sd.draw(pg.get_context(), pg.cur_sdata())
         } else {
             ctx.font = "30px serif"
             ctx.fillText("pg == null", 10, 10)
         }
     }
     let [r, sid] = p.query_situation(lv1.start_query)
+    let upKey = null
     let rightKey = null
+    let downKey = null
+    let leftKey = null
     if (r && sid.length > 0) {
         pg = p.start(sid[0])
+        upKey = () => {
+            pg.move(0)
+            drawFunc()
+        }
         rightKey = () => {
             pg.move(1)
+            drawFunc()
+        }
+        downKey = () => {
+            pg.move(2)
+            drawFunc()
+        }
+        leftKey = () => {
+            pg.move(3)
             drawFunc()
         }
     } else {
@@ -68,6 +83,9 @@ if (result) {
         let r = false
         if (code == "ArrowLeft") {
             sd.ox -= 10
+            if (leftKey != null) {
+                leftKey()
+            }
             r = true
         } else if (code == "ArrowRight") {
             sd.ox += 10
@@ -77,9 +95,15 @@ if (result) {
             r = true
         } else if (code == "ArrowUp") {
             sd.oy -= 10
+            if (upKey != null) {
+                upKey()
+            }
             r = true
         } else if (code == "ArrowDown") {
             sd.oy += 10
+            if (downKey != null) {
+                downKey()
+            }
             r = true
         } else if (code == "KeyC") {
             log_buf = ""

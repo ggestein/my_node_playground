@@ -2,124 +2,144 @@ import PB from "./lib/pb.js"
 
 export default class SKB {
     build(level) {
-        const l = console.log
         try {
-            let pb = new PB()
+            const pb = new PB()
+            
+            pb.append_struct([
 
-            pb.append_enum([
-
-            ["test_enum_0", "name", "desc"        , "price"],
-                        [ "str" , "str"         , "num"  ],
-            //-----------------------------------------------
-            [0            , "John", "This is John", 100    ],
-            [1            , "Tom" , "Tom desu"    , 150    ],
-
-            ])
-
-            pb.append_enum([
-
-            ["test_enum_1", "from", "to" ],
-                        [ "num" , "num"],
-            //-----------------------------------------------
-            [0            , 10    , 20   ],
-            [1            , 20    , 30   ],
+                "point",
+                //----------------------------
+                ["x", "0~5"],
+                ["y", "0~5"],
 
             ])
+
+            level.build(pb)
 
             pb.append_struct([
 
-            "point",
-            //-----------------------------------------------
-            ["x", "-1~1"],
-            ["y", "-1;3"],
+                "skb_state",
+                //----------------------------
+                ["boxes" , "lv_boxes"],
+                ["player", "point"],
 
             ])
 
-            pb.append_struct([
-
-            "test_struct",
-            //-----------------------------------------------
-            ["toy", "test_enum_0"],
-            ["range", "test_enum_1"],
-            ["pos0", "point"],
-
-            ])
-
-            level(pb)
-
-            pb.set_main("test_struct")
-            pb.set_prefilter((ctx, s) => true)
-            pb.append_rule((ctx, s0, s1) => {
-                const s0pos0x = s0.g("pos0").g("x")
-                const s0pos0y = s0.g("pos0").g("y")
-                const s1pos0x = s1.g("pos0").g("x")
-                const s1pos0y = s1.g("pos0").g("y")
-                const s0toy = s0.g("toy")
-                const s1toy = s1.g("toy")
-                const s0range = s0.g("range")
-                const s1range = s1.g("range")
-                const b0 = s1pos0x - s0pos0x == 1
-                const b1 = s1pos0y == s0pos0y
-                const b2 = ctx.eq(s0toy, s1toy)
-                const b3 = ctx.eq(s0range, s1range)
-                return b0 && b1 && b2 && b3
-            }, 1, "move right")
-            let p = pb.build()
-            l(`TOTAL SITUATION COUNT: ${p.total_situation_count()}`)
-            let [result, sl] = p.query_situation((ctx, s) => {
-                const x = s.g("pos0").g("x")
-                const y = s.g("pos0").g("y")
-                const r = x == -1 && y == -1
-                return r
+            pb.set_main("skb_state")
+            pb.set_prefilter((ctx, s) => {
+                let points = []
+                let walls = ctx.get_enum("lv_walls")
+                let walls_count = walls.count()
+                for (let i = 0; i < walls_count; i++) {
+                    const wc = walls.get(i)
+                    const wx = wc.g("x")
+                    const wy = wc.g("y")
+                    for (let j = 0; j < points.length; j++) {
+                        if (points[j][0] == wx && points[j][1] == wy) {
+                            return false
+                        }
+                    }
+                    points.push([wx, wy])
+                }
+                let goals = ctx.get_enum("lv_goals")
+                let goals_count = goals.count()
+                for (let i = 0; i < goals_count; i++) {
+                    const gc = goals.get(i)
+                    const gx = gc.g("x")
+                    const gy = gc.g("y")
+                    for (let j = 0; j < points.length; j++) {
+                        if (points[j][0] == gx && points[j][1] == gy) {
+                            return false
+                        }
+                    }
+                }
+                let boxes = s.g("boxes")
+                let bkv = boxes.ks()
+                for (let i = 0; i < bkv.length; i++) {
+                    const bc = boxes.g(bkv[i])
+                    const bx = bc.g("x")
+                    const by = bc.g("y")
+                    for (let j = 0; j < points.length; j++) {
+                        if (points[j][0] == bx && points[j][1] == by) {
+                            return false
+                        }
+                    }
+                    points.push([bx, by])
+                }
+                let pc = s.g("player")
+                let px = pc.g("x")
+                let py = pc.g("y")
+                for (let j = 0; j < points.length; j++) {
+                    if (points[j][0] == px && points[j][1] == py) {
+                        return false
+                    }
+                }
+                return true
             })
-            const ls = (id, s) => {
-                l(`****[${id}]`)
-                const ks = s.ks()
-                l(`ks.length = ${ks.length}`)
-                for (let i = 0; i < ks.length; i++) {
-                    l(` ===== ${ks[i]}`)
+
+            const moveEmpty = (ctx, s0, s1, dx, dy) => {
+                const b0 = s0.g("boxes")
+                const b1 = s1.g("boxes")
+                if (!ctx.eq(b0, b1)) {
+                    return false
                 }
-                l(`toy: ${s.g("toy")}`)
-                l(`toy.name: ${s.g("toy").g("name")}`)
-                l(`toy.desc: ${s.g("toy").g("desc")}`)
-                l(`toy.price: ${s.g("toy").g("price")}`)
-                l(`range: ${s.g("range")}`)
-                l(`range.from: ${s.g("range").g("from")}`)
-                l(`range.to: ${s.g("range").g("to")}`)
-                l(`pos0.x: ${s.g("pos0").g("x")}`)
-                l(`pos0.y: ${s.g("pos0").g("y")}`)
-                const vm = p.get_valid_input(id)
-                l(`---- [${vm.length}]`)
-                for (let j = 0; j < vm.length; j++) {
-                    l(`   ${vm[j][0]} => ${vm[j][1]}`)
-                }
+                const pc0 = s0.g("player")
+                const px0 = pc0.g("x")
+                const py0 = pc0.g("y")
+                const pc1 = s1.g("player")
+                const px1 = pc1.g("x")
+                const py1 = pc1.g("y")
+                return px0 + dx == px1 && py0 + dy == py1
             }
-            if (result) {
-                l("QUERY RESULT COUNT: ", sl.length)
-                for (let i = 0; i < sl.length; i++) {
-                    const id = sl[i]
-                    const s = p.get_situation(id)
-                    // ls(id, s)
+            const movePush = (s0, s1, dx, dy) => {
+                const pc0 = s0.g("player")
+                const px0 = pc0.g("x")
+                const py0 = pc0.g("y")
+                const tx = px0 + dx
+                const ty = py0 + dy
+                const pc1 = s1.g("player")
+                const px1 = pc1.g("x")
+                const py1 = pc1.g("y")
+                if (tx != px1 || ty != py1) {
+                    return false;
                 }
-                if (sl.length > 0) {
-                    let mr = false
-                    let pg = p.start(sl[sl.length - 1])
-                    ls(pg.cur_sid(), pg.cur_sdata())
-                    mr = pg.move(1)
-                    l(`INPUT 1----- [0] ${mr}`)
-                    ls(pg.cur_sid(), pg.cur_sdata())
-                    mr = pg.move(1)
-                    l(`INPUT 1----- [1] ${mr}`)
-                    ls(pg.cur_sid(), pg.cur_sdata())
-                    mr = pg.move(1)
-                    l(`INPUT 1----- [2] ${mr}`)
-                    ls(pg.cur_sid(), pg.cur_sdata())
+                const boxes = s0.g("boxes")
+                const boxes1 = s1.g("boxes")
+                const bks = boxes.ks()
+                for (let i = 0; i < bks.length; i++) {
+                    const bc = boxes.g(bks[i])
+                    const bx = bc.g("x")
+                    const by = bc.g("y")
+                    const bc1 = boxes1.g(bks[i])
+                    const bx1 = bc1.g("x")
+                    const by1 = bc1.g("y")
+                    if (bx == tx && by == ty) {
+                        if (bx1 != tx + dx || by1 != ty + dy) {
+                            return false
+                        }
+                    } else {
+                        if (bx != bx1 || by != by1) {
+                            return false
+                        }
+                    }
                 }
-            } else {
-                l("QUERY ERROR:\n", sl)
+                return true
             }
+
+            pb.append_rule((ctx, s0, s1) => moveEmpty(ctx, s0, s1, 0, -1), 0, "UE") // TODO
+            pb.append_rule((ctx, s0, s1) => moveEmpty(ctx, s0, s1, 1, 0), 1, "RE") // TODO
+            pb.append_rule((ctx, s0, s1) => moveEmpty(ctx, s0, s1, 0, 1), 2, "DE") // TODO
+            pb.append_rule((ctx, s0, s1) => moveEmpty(ctx, s0, s1, -1, 0), 3, "LE") // TODO
+            pb.append_rule((ctx, s0, s1) => movePush(s0, s1, 0, -1), 0, "UP") // TODO
+            pb.append_rule((ctx, s0, s1) => movePush(s0, s1, 1, 0), 1, "RP") // TODO
+            pb.append_rule((ctx, s0, s1) => movePush(s0, s1, 0, 1), 2, "DP") // TODO
+            pb.append_rule((ctx, s0, s1) => movePush(s0, s1, -1, 0), 3, "LP") // TODO
+
+            let p = pb.build()
             return [true, p]
+
         } catch (err) {
+            console.error(err)
             return [false, err]
         }
     }
