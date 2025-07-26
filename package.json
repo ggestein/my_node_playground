@@ -1,0 +1,23 @@
+{
+  "name": "my_node_playground",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "node pb_test.js",
+    "live": "node start_live_server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ggestein/my_node_playground.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ggestein/my_node_playground/issues"
+  },
+  "homepage": "https://github.com/ggestein/my_node_playground#readme",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
