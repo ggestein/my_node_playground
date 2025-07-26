@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "test": "node pb_test.js",
-    "live": "node start_live_server.js"
+    "live": "node start_live_server.js",
+    "skb": "node start_live_skb.js"
   },
   "repository": {
     "type": "git",
