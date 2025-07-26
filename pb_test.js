@@ -99,6 +99,11 @@ try {
         })
         const ls = (id, s) => {
             console.log(`****[${id}]`)
+            const ks = s.ks()
+            console.log(`ks.length = ${ks.length}`)
+            for (let i = 0; i < ks.length; i++) {
+                console.log(` ===== ${ks[i]}`)
+            }
             console.log(`toy: ${s.g("toy")}`)
             console.log(`toy.name: ${s.g("toy").g("name")}`)
             console.log(`toy.desc: ${s.g("toy").g("desc")}`)

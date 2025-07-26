@@ -78,6 +78,11 @@ import PB from "./pb.js"
     })
     const ls = (id, s) => {
         l(`****[${id}]`)
+        const ks = s.ks()
+        l(`ks.length = ${ks.length}`)
+        for (let i = 0; i < ks.length; i++) {
+            l(` ===== ${ks[i]}`)
+        }
         l(`toy: ${s.g("toy")}`)
         l(`toy.name: ${s.g("toy").g("name")}`)
         l(`toy.desc: ${s.g("toy").g("desc")}`)

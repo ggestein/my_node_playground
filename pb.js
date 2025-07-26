@@ -28,6 +28,9 @@ class C {
     i() {
         return this.idx
     }
+    ks() {
+        return this.belongNamedEnum.allkeys()
+    }
     toString() {
         return `<[${this.idx}]${this.belongNamedEnum.name}>`
     }
@@ -50,6 +53,13 @@ class NE {
     }
     getField(name) {
         return this.fi.get(name)
+    }
+    allkeys() {
+        let r = []
+        for (let [k, v] of this.fi) {
+            r.push(k)
+        }
+        return r
     }
     appendFI(name, info) {
         this.fi.set(name, info)
