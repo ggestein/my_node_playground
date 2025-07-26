@@ -1,5 +1,5 @@
 import SKB from "./skb.js"
-import lv1 from "./levels/lv1.js"
+import {lv1} from "./levels/lv1.js"
 import SD from "./skb_drawer.js"
 
 (() => {
@@ -35,11 +35,34 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
 const skb = new SKB()
-let [result, p] = skb.build(lv1)
+let [result, p] = skb.build(lv1.build)
 if (result) {
     l("SUCCESS TO BUILD")
+    let pg = null
     let sd = new SD(ctx, canvas.width, canvas.height)
-    sd.draw(p)
+    const drawFunc = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = "#000000"
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        if (pg != null) {
+            sd.draw(pg.cur_sdata())
+        } else {
+            ctx.font = "30px serif"
+            ctx.fillText("pg == null", 10, 10)
+        }
+    }
+    let [r, sid] = p.query_situation(lv1.start_query)
+    let rightKey = null
+    if (r && sid.length > 0) {
+        pg = p.start(sid[0])
+        rightKey = () => {
+            pg.move(1)
+            drawFunc()
+        }
+    } else {
+
+    }
+    drawFunc()
     onKeyup = (code) => {
         l(`onKeyup: ${code}`)
         let r = false
@@ -48,6 +71,9 @@ if (result) {
             r = true
         } else if (code == "ArrowRight") {
             sd.ox += 10
+            if (rightKey != null) {
+                rightKey()
+            }
             r = true
         } else if (code == "ArrowUp") {
             sd.oy -= 10
