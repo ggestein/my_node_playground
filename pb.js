@@ -60,6 +60,46 @@ class NE {
     }
 }
 
+class PG {
+    constructor(p, sid) {
+        this.p = p
+        this.sid = sid
+        this.hist = []
+        this.hid = 0
+    }
+
+    cur_sid() {
+        if (this.hid !== 0) {
+            return this.hist[this.hist.length - this.hid]
+        }
+        return this.sid
+    }
+
+    cur_sdata() {
+        const csid = this.cur_sid()
+        return this.p.get_situation(csid)
+    }
+
+    move(input) {
+        const ts = this.p.get_move_target(this.cur_sid(), input)
+        if (ts === undefined || ts === null) {
+            return false
+        }
+        this.hist.splice(this.hist.length - this.hid, this.hid, this.cur_sid())
+        this.sid = ts
+        this.hid = 0
+        return true
+    }
+    rewind() {
+        const nhd = this.hid + 1
+        if (nhd >= this.hist.length) {
+            return false
+        }
+        this.hid = nhd
+        return true
+    }
+}
+
 class P {
     constructor(ctx, sground, sgraph) {
         this.ctx = ctx
@@ -101,12 +141,12 @@ class P {
         }
         let r = []
         for (let [k, v] of m) {
-            r.push([k, v[0]])
+            r.push([k, v[0][0]])
         }
         return r
     }
     get_move_target(id, input) {
-        const m = this.sgraph[id]
+        const m = this.sgraph.get(id)
         if (m === undefined) {
             return null
         }
@@ -114,7 +154,10 @@ class P {
         if (t === undefined) {
             return null
         }
-        return t
+        return t[0][0]
+    }
+    start(sid) {
+        return new PG(this, sid)
     }
     dump() {
         const l = console.log
@@ -344,11 +387,28 @@ export default class PB {
                             tl = []
                             adj.set(ipt, tl)
                         }
-                        tl.push(i1)
+                        tl.push([i1, this.rules[ir][2]])
                     }
                 }
             }
             sgraph.set(i0, adj)
+        }
+        let multt = []
+        for (let [k0, v0] of sgraph) {
+            for (let [k1, v1] of v0) {
+                if (v1.length > 1) {
+                    multt.push(`MULTI INPUT MOVE [${k0}] -> ${k1}`)
+                    for (let i = 0; i < v1.length; i++) {
+                        multt.push(` - ${v1[i]}`)
+                    }
+                }
+            }
+        }
+        if (multt.length > 0) {
+            console.log(" ===== MULTI INPUT MOVES =====")
+            for (let i = 0; i < multt.length; i++) {
+                console.log(multt[i])
+            }
         }
         let p = new P(ctx, sground, sgraph)
         l("[BUILD] END")
