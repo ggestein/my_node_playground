@@ -13,13 +13,63 @@ const l = (obj) => {
 const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
 
+let keyStates = {}
+let onKeydown = null
+const handleKeydown = (evt) => {
+    if (keyStates[evt.code]) {
+        return
+    }
+    keyStates[evt.code] = true
+    if (onKeydown != null) {
+        onKeydown(evt.code)
+    }
+}
+let onKeyup = null
+const handleKeyup = (evt) => {
+    keyStates[evt.code] = false
+    if (onKeyup != null) {
+        onKeyup(evt.code)
+    }
+}
+document.addEventListener("keydown", handleKeydown)
+document.addEventListener("keyup", handleKeyup)
+
 const skb = new SKB()
 let [result, p] = skb.build(lv1)
 if (result) {
     l("SUCCESS TO BUILD")
-    l(p.__proto__.constructor)
     let sd = new SD(ctx, canvas.width, canvas.height)
     sd.draw(p)
+    onKeyup = (code) => {
+        l(`onKeyup: ${code}`)
+        let r = false
+        if (code == "ArrowLeft") {
+            sd.ox -= 10
+            r = true
+        } else if (code == "ArrowRight") {
+            sd.ox += 10
+            r = true
+        } else if (code == "ArrowUp") {
+            sd.oy -= 10
+            r = true
+        } else if (code == "ArrowDown") {
+            sd.oy += 10
+            r = true
+        } else if (code == "KeyC") {
+            log_buf = ""
+            log.value = log_buf
+        } else if (code == "KeyR") {
+            sd.ox = 0
+            sd.oy = 0
+            r = true
+        }
+        if (r) {
+            sd.draw(p)
+        }
+    }
+    onKeydown = (code) => {
+        l(`onKeydown: ${code}`)
+    }
 } else {
     l("FAILED TO BUILD")
     l(p)

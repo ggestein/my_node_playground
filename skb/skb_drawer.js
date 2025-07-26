@@ -3,7 +3,6 @@ export default class SD {
         this.ctx = ctx
         this.ox = 0
         this.oy = 0
-        console.log(`w: ${w}, h: ${h}`)
         this.w = w
         this.h = h
     }
@@ -15,6 +14,10 @@ export default class SD {
         this.ctx.fillStyle = "#000000"
         this.ctx.fillRect(0, 0, this.w, this.h)
         this.ctx.fillStyle = "#ddddcc"
-        this.ctx.fillRect(20, 20, 50, 30)
+        this.ctx.fillRect(20 + this.ox, 20 + this.oy, 50, 30)
+        this.ctx.font = "50px serif"
+        this.ctx.textAlign = "left"
+        this.ctx.textBaseline = "top"
+        this.ctx.fillText("Hello", 100 + this.ox, 20 + this.oy)
     }
 }

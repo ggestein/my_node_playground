@@ -1,4 +1,4 @@
-import PB from "./pb.js"
+import PB from "./lib/pb.js"
 
 export default class SKB {
     build(level) {

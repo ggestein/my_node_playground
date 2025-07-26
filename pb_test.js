@@ -1,4 +1,4 @@
-import PB from "./skb/pb.js"
+import PB from "./lib/pb.js"
 
 try {
     let pb = new PB()
