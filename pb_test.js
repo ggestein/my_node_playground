@@ -38,8 +38,8 @@ try {
     //-----------------------------------------------
     ["toy", "test_enum_0"],
     ["range", "test_enum_1"],
-    ["x", "-1~1"],
-    ["y", "-1;3"],
+    ["pos0", "point"],
+    ["pos1", "point"],
 
     ])
     const test_branch = 2
@@ -77,8 +77,9 @@ try {
         pb.set_prefilter((ctx, s) => true)
         pb.append_rule((ctx, s0, s1) => true, 1, "first rule")
         let p = pb.build()
-        let [result, sl] = p.query_situation((ctx, s) => s.g("x") == 1)
+        let [result, sl] = p.query_situation((ctx, s) => s.g("pos0").g("x") != s.g("pos1").g("x") && s.g("pos0").g("y") != s.g("pos1").g("y"))
         if (result) {
+            console.log("QUERY RESULT COUNT: ", sl.length)
             for (let i = 0; i < sl.length; i++) {
                 const id = sl[i]
                 const s = p.get_situation(id)
@@ -90,9 +91,16 @@ try {
                 console.log(`range: ${s.g("range")}`)
                 console.log(`range.from: ${s.g("range").g("from")}`)
                 console.log(`range.to: ${s.g("range").g("to")}`)
-                console.log(`x: ${s.g("x")}`)
-                console.log(`y: ${s.g("y")}`)
+                console.log(`pos0.x: ${s.g("pos0").g("x")}`)
+                console.log(`pos1.y: ${s.g("pos1").g("y")}`)
+                const vm = p.get_valid_input(id)
+                console.log(`---- [${vm.length}]`)
+                for (let j = 0; j < vm.length; j++) {
+                    console.log(`   ${vm[j][0]} => ${vm[j][1]}`)
+                }
             }
+        } else {
+            console.log("QUERY ERROR:\n", sl)
         }
     }
 } catch(err) {

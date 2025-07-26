@@ -28,6 +28,9 @@ class C {
     i() {
         return this.idx
     }
+    toString() {
+        return `<[${this.idx}]${this.belongNamedEnum.name}>`
+    }
 }
 
 class NE {
@@ -92,13 +95,13 @@ class P {
     }
 
     get_valid_input(id) {
-        const m = this.sgraph[id]
+        const m = this.sgraph.get(id)
         if (m === undefined) {
             return null
         }
         let r = []
-        for (let [k, v] in m) {
-            r.push(k)
+        for (let [k, v] of m) {
+            r.push([k, v[0]])
         }
         return r
     }
@@ -335,7 +338,13 @@ export default class PB {
                 const s1 = sl[i1]
                 for (let ir = 0; ir < this.rules.length; ir++) {
                     if (this.rules[ir][0](ctx, s0, s1)) {
-                        adj.set(i0, [this.rules[ir][1], i1])
+                        const ipt = this.rules[ir][1]
+                        let tl = adj.get(ipt)
+                        if (tl === undefined) {
+                            tl = []
+                            adj.set(ipt, tl)
+                        }
+                        tl.push(i1)
                     }
                 }
             }
