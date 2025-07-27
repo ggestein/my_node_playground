@@ -1,5 +1,9 @@
 import SKB from "./skb.js"
 import {lv1} from "./levels/lv1.js"
+import {lv2} from "./levels/lv2.js"
+import {lv3} from "./levels/lv3.js"
+import {lv4} from "./levels/lv4.js"
+import {lv5} from "./levels/lv5.js"
 import SD from "./skb_drawer.js"
 
 (() => {
@@ -35,7 +39,15 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
 const skb = new SKB()
-let [result, p] = skb.build(lv1)
+const lvs = [
+    lv1,
+    lv2,
+    lv3,
+    lv4,
+    lv5
+]
+let lvidx = 0
+let [result, p] = skb.build(lvs[lvidx])
 if (result) {
     l("SUCCESS TO BUILD")
     let pg = null
@@ -58,58 +70,72 @@ if (result) {
             ctx.fillText("WIN", 100, 100)
         }
     }
-    let [sr, startId] = p.parse_situation_id(lv1.start)
+    let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
     let upKey = null
     let rightKey = null
     let downKey = null
     let leftKey = null
+    const trigger_win = () => {
+        if (lvidx < lvs.length - 1) {
+            setTimeout(() => {
+                lvidx++
+                win = false
+                let [nxr, nxp] = skb.build(lvs[lvidx])
+                result = nxr
+                p = nxp
+                let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
+                pg = p.start(startId)
+                drawFunc()
+            }, 1500)
+        }
+    }
     if (sr) {
         pg = p.start(startId)
         upKey = () => {
+            if (win) {
+                return
+            }
             if (pg.move(0)) {
                 drawFunc()
                 win = pg.check_win()
                 if (win) {
-                    upKey = null
-                    rightKey = null
-                    downKey = null
-                    leftKey = null
+                    trigger_win()
                 }
             }
         }
         rightKey = () => {
+            if (win) {
+                return
+            }
             if (pg.move(1)) {
                 drawFunc()
                 win = pg.check_win()
                 if (win) {
-                    upKey = null
-                    rightKey = null
-                    downKey = null
-                    leftKey = null
+                    trigger_win()
                 }
             }
         }
         downKey = () => {
+            if (win) {
+                return
+            }
             if (pg.move(2)) {
                 drawFunc()
                 win = pg.check_win()
                 if (win) {
-                    upKey = null
-                    rightKey = null
-                    downKey = null
-                    leftKey = null
+                    trigger_win()
                 }
             }
         }
         leftKey = () => {
+            if (win) {
+                return
+            }
             if (pg.move(3)) {
                 drawFunc()
                 win = pg.check_win()
                 if (win) {
-                    upKey = null
-                    rightKey = null
-                    downKey = null
-                    leftKey = null
+                    trigger_win()
                 }
             }
         }
@@ -144,6 +170,9 @@ if (result) {
             log_buf = ""
             log.value = log_buf
         } else if (code == "KeyR") {
+            if (win) {
+                return
+            }
             pg.rewind()
             r = true
         }
