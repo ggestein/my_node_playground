@@ -114,7 +114,7 @@ if (result) {
             r = true
         }
         if (r) {
-            sd.draw(p)
+            drawFunc()
         }
     }
     onKeydown = (code) => {

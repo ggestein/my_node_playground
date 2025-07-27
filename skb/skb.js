@@ -75,6 +75,27 @@ export default class SKB {
                 return true
             })
 
+            pb.append_move(0, (ctx, s) => {
+                let r = structuredClone(s)
+                r.player.y -= 1
+                return r
+            })
+            pb.append_move(1, (ctx, s) => {
+                let r = structuredClone(s)
+                r.player.x += 1
+                return r
+            })
+            pb.append_move(2, (ctx, s) => {
+                let r = structuredClone(s)
+                r.player.y += 1
+                return r
+            })
+            pb.append_move(3, (ctx, s) => {
+                let r = structuredClone(s)
+                r.player.x -= 1
+                return r
+            })
+
             let p = pb.build()
             return [true, p]
 
