@@ -45,19 +45,19 @@ if (result) {
         ctx.fillStyle = "#181818"
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         if (pg != null) {
-            sd.draw(pg.get_context(), pg.cur_sdata())
+            sd.draw(pg.get_context(), pg.cur_sdata()[1])
         } else {
             ctx.font = "30px serif"
             ctx.fillText("pg == null", 10, 10)
         }
     }
-    let [r, sid] = p.query_situation(lv1.start_query)
+    let [sr, startId] = p.parse_situation_id(lv1.start)
     let upKey = null
     let rightKey = null
     let downKey = null
     let leftKey = null
-    if (r && sid.length > 0) {
-        pg = p.start(sid[0])
+    if (sr) {
+        pg = p.start(startId)
         upKey = () => {
             pg.move(0)
             drawFunc()
@@ -75,7 +75,7 @@ if (result) {
             drawFunc()
         }
     } else {
-
+        l(`FAILED TO PARSE START SITUATION:\n${startId}`)
     }
     drawFunc()
     onKeyup = (code) => {

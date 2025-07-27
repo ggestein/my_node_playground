@@ -30,12 +30,11 @@ export default class SD {
             this.ctx.fillRect(50 + gx * 50, 50 + gy * 50, 50, 50)
         }
         // draw boxes
-        let boxes = s.g("boxes")
-        let bks = boxes.ks()
-        for (let i = 0; i < bks.length; i++) {
-            let b = boxes.g(bks[i])
-            const bx = b.g("x")
-            const by = b.g("y")
+        let boxes = s.boxes
+        for (let k in boxes) {
+            let b = boxes[k]
+            const bx = b.x
+            const by = b.y
             this.ctx.fillStyle = "#772222"
             this.ctx.fillRect(50 + bx * 50 + 2, 50 + by * 50 + 2, 50 - 4, 50 - 4)
             this.ctx.fillStyle = "#ffffff"
@@ -43,9 +42,9 @@ export default class SD {
         }
 
         // draw player
-        let pc = s.g("player")
-        const px = pc.g("x")
-        const py = pc.g("y")
+        let pc = s.player
+        const px = pc.x
+        const py = pc.y
         this.ctx.fillStyle = "#ccff00"
         this.ctx.fillRect(50 + px * 50, 50 + py * 50, 50, 50)
     }
