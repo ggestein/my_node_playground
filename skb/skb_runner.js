@@ -40,6 +40,7 @@ if (result) {
     l("SUCCESS TO BUILD")
     let pg = null
     let sd = new SD(ctx, canvas.width, canvas.height)
+    let win = false
     const drawFunc = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ctx.fillStyle = "#181818"
@@ -50,6 +51,12 @@ if (result) {
             ctx.font = "30px serif"
             ctx.fillText("pg == null", 10, 10)
         }
+        if (win) {
+            ctx.font = "100px serif"
+            ctx.textBaseline = "top"
+            ctx.fillStyle = "#ffffff"
+            ctx.fillText("WIN", 100, 100)
+        }
     }
     let [sr, startId] = p.parse_situation_id(lv1.start)
     let upKey = null
@@ -59,20 +66,52 @@ if (result) {
     if (sr) {
         pg = p.start(startId)
         upKey = () => {
-            pg.move(0)
-            drawFunc()
+            if (pg.move(0)) {
+                drawFunc()
+                win = pg.check_win()
+                if (win) {
+                    upKey = null
+                    rightKey = null
+                    downKey = null
+                    leftKey = null
+                }
+            }
         }
         rightKey = () => {
-            pg.move(1)
-            drawFunc()
+            if (pg.move(1)) {
+                drawFunc()
+                win = pg.check_win()
+                if (win) {
+                    upKey = null
+                    rightKey = null
+                    downKey = null
+                    leftKey = null
+                }
+            }
         }
         downKey = () => {
-            pg.move(2)
-            drawFunc()
+            if (pg.move(2)) {
+                drawFunc()
+                win = pg.check_win()
+                if (win) {
+                    upKey = null
+                    rightKey = null
+                    downKey = null
+                    leftKey = null
+                }
+            }
         }
         leftKey = () => {
-            pg.move(3)
-            drawFunc()
+            if (pg.move(3)) {
+                drawFunc()
+                win = pg.check_win()
+                if (win) {
+                    upKey = null
+                    rightKey = null
+                    downKey = null
+                    leftKey = null
+                }
+            }
         }
     } else {
         l(`FAILED TO PARSE START SITUATION:\n${startId}`)
@@ -82,25 +121,21 @@ if (result) {
         l(`onKeyup: ${code}`)
         let r = false
         if (code == "ArrowLeft") {
-            sd.ox -= 10
             if (leftKey != null) {
                 leftKey()
             }
             r = true
         } else if (code == "ArrowRight") {
-            sd.ox += 10
             if (rightKey != null) {
                 rightKey()
             }
             r = true
         } else if (code == "ArrowUp") {
-            sd.oy -= 10
             if (upKey != null) {
                 upKey()
             }
             r = true
         } else if (code == "ArrowDown") {
-            sd.oy += 10
             if (downKey != null) {
                 downKey()
             }
@@ -109,8 +144,7 @@ if (result) {
             log_buf = ""
             log.value = log_buf
         } else if (code == "KeyR") {
-            sd.ox = 0
-            sd.oy = 0
+            pg.rewind()
             r = true
         }
         if (r) {

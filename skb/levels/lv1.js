@@ -48,15 +48,4 @@ export let lv1 = {
             y: 3
         }
     }
-    /*
-    (ctx, s) => {
-        const b0 = s.g("boxes").g("box_0").g("x") == 1
-        const b1 = s.g("boxes").g("box_0").g("y") == 3
-        const b2 = s.g("boxes").g("box_1").g("x") == 2
-        const b3 = s.g("boxes").g("box_1").g("y") == 2
-        const b6 = s.g("player").g("x") == 3
-        const b7 = s.g("player").g("y") == 3
-        return b0 && b1 && b2 && b3 && b6 && b7
-    }
-    */
 }

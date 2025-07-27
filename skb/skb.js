@@ -75,25 +75,47 @@ export default class SKB {
                 return true
             })
 
-            pb.append_move(0, (ctx, s) => {
-                let r = structuredClone(s)
-                r.player.y -= 1
-                return r
-            })
-            pb.append_move(1, (ctx, s) => {
-                let r = structuredClone(s)
-                r.player.x += 1
-                return r
-            })
-            pb.append_move(2, (ctx, s) => {
-                let r = structuredClone(s)
-                r.player.y += 1
-                return r
-            })
-            pb.append_move(3, (ctx, s) => {
-                let r = structuredClone(s)
-                r.player.x -= 1
-                return r
+            const moveAndPush = (ctx, s, dx, dy) => {
+                const tx = s.player.x + dx
+                const ty = s.player.y + dy
+                s.player.x = tx
+                s.player.y = ty
+                for (let bk in s.boxes) {
+                    let bv = s.boxes[bk]
+                    if (bv.x == tx && bv.y == ty) {
+                        bv.x = tx + dx
+                        bv.y = ty + dy
+                        break
+                    }
+                }
+                return s
+            }
+
+            pb.append_move(0, (ctx, s) => moveAndPush(ctx, s, 0, -1))
+            pb.append_move(1, (ctx, s) => moveAndPush(ctx, s, 1, 0))
+            pb.append_move(2, (ctx, s) => moveAndPush(ctx, s, 0, 1))
+            pb.append_move(3, (ctx, s) => moveAndPush(ctx, s, -1, 0))
+
+            pb.set_win_check((ctx, s) => {
+                let goals = ctx.get_enum("lv_goals")
+                let goals_count = goals.count()
+                for (let i = 0; i < goals_count; i++) {
+                    let gc = goals.get(i)
+                    let gx = gc.g("x")
+                    let gy = gc.g("y")
+                    let ok = false
+                    for (let bk in s.boxes) {
+                        let bv = s.boxes[bk]
+                        if (gx == bv.x && gy == bv.y) {
+                            ok = true
+                            break
+                        }
+                    }
+                    if (!ok) {
+                        return false
+                    }
+                }
+                return true
             })
 
             let p = pb.build()
