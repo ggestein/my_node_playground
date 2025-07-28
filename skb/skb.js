@@ -26,7 +26,7 @@ export default class SKB {
             ])
 
             pb.set_main("skb_state")
-            pb.set_prefilter((ctx, s) => {
+            pb.append_prefilter((ctx, s) => {
                 let points = []
                 let walls = ctx.get_enum("lv_walls")
                 let walls_count = walls.count()

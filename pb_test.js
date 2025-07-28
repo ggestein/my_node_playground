@@ -44,7 +44,7 @@ try {
     const test_branch = 2
     if (test_branch == 0) {
         pb.set_main("test_enum_0")
-        pb.set_prefilter((ctx, s) => {
+        pb.append_prefilter((ctx, s) => {
             return true
         })
         pb.append_move(1, (ctx, s) => {
@@ -74,7 +74,7 @@ try {
         console.log("avm1 = ", avm1)
     } else if (test_branch == 1) {
         pb.set_main("test_enum_1")
-        pb.set_prefilter((ctx, s) => {
+        pb.append_prefilter((ctx, s) => {
             return true
         })
         pb.append_move(1, (ctx, s) => {
@@ -104,7 +104,7 @@ try {
         console.log("avm1 = ", avm1)
     } else if (test_branch == 2) {
         pb.set_main("test_struct")
-        pb.set_prefilter((ctx, s) => true)
+        pb.append_prefilter((ctx, s) => true)
         let p = pb.build()
         for (let i = 0; i < 40; i++) {
             console.log(`<<<${i}>>>`)

@@ -52,7 +52,7 @@ import PB from "./pb.js"
     ])
 
     pb.set_main("test_struct")
-    pb.set_prefilter((ctx, s) => true)
+    pb.append_prefilter((ctx, s) => true)
     pb.append_rule((ctx, s0, s1) => {
         const s0pos0x = s0.g("pos0").g("x")
         const s0pos0y = s0.g("pos0").g("y")
