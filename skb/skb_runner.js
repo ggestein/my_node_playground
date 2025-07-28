@@ -1,4 +1,5 @@
 import SKB from "./skb.js"
+import { skb_box_rules } from "./skb_box_rules.js"
 import {lv1} from "./levels/lv1.js"
 import {lv2} from "./levels/lv2.js"
 import {lv3} from "./levels/lv3.js"
@@ -47,7 +48,7 @@ const lvs = [
     lv5
 ]
 let lvidx = 0
-let [result, p] = skb.build(lvs[lvidx])
+let [result, p] = skb.build(skb_box_rules, lvs[lvidx])
 if (result) {
     l("SUCCESS TO BUILD")
     let pg = null
@@ -80,7 +81,7 @@ if (result) {
             setTimeout(() => {
                 lvidx++
                 win = false
-                let [nxr, nxp] = skb.build(lvs[lvidx])
+                let [nxr, nxp] = skb.build(skb_box_rules, lvs[lvidx])
                 result = nxr
                 p = nxp
                 let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)

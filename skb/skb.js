@@ -1,7 +1,7 @@
 import PB from "./lib/pb.js"
 
 export default class SKB {
-    build(level) {
+    build(box_moves, level) {
         try {
             const pb = new PB()
             
@@ -53,18 +53,6 @@ export default class SKB {
                         }
                     }
                 }
-                let boxes = s.boxes
-                for (let k in boxes) {
-                    const bc = boxes[k]
-                    const bx = bc.x
-                    const by = bc.y
-                    for (let j = 0; j < points.length; j++) {
-                        if (points[j][0] == bx && points[j][1] == by) {
-                            return false
-                        }
-                    }
-                    points.push([bx, by])
-                }
                 let px = s.player.x
                 let py = s.player.y
                 for (let j = 0; j < points.length; j++) {
@@ -75,26 +63,21 @@ export default class SKB {
                 return true
             })
 
-            const moveAndPush = (ctx, s, dx, dy) => {
+            const moveAndCollide = (ctx, s, dx, dy) => {
+                let r = structuredClone(s)
                 const tx = s.player.x + dx
                 const ty = s.player.y + dy
-                s.player.x = tx
-                s.player.y = ty
-                for (let bk in s.boxes) {
-                    let bv = s.boxes[bk]
-                    if (bv.x == tx && bv.y == ty) {
-                        bv.x = tx + dx
-                        bv.y = ty + dy
-                        break
-                    }
-                }
-                return s
+                r.player.x = tx
+                r.player.y = ty
+                return r
             }
 
-            pb.append_move(0, (ctx, s) => moveAndPush(ctx, s, 0, -1))
-            pb.append_move(1, (ctx, s) => moveAndPush(ctx, s, 1, 0))
-            pb.append_move(2, (ctx, s) => moveAndPush(ctx, s, 0, 1))
-            pb.append_move(3, (ctx, s) => moveAndPush(ctx, s, -1, 0))
+            pb.append_move(0, (ctx, s) => moveAndCollide(ctx, s, 0, -1))
+            pb.append_move(1, (ctx, s) => moveAndCollide(ctx, s, 1, 0))
+            pb.append_move(2, (ctx, s) => moveAndCollide(ctx, s, 0, 1))
+            pb.append_move(3, (ctx, s) => moveAndCollide(ctx, s, -1, 0))
+
+            // box_moves.build(pb)
 
             pb.set_win_check((ctx, s) => {
                 let goals = ctx.get_enum("lv_goals")
