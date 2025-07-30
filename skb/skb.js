@@ -77,7 +77,7 @@ export default class SKB {
             pb.append_move(2, (ctx, s) => moveAndCollide(ctx, s, 0, 1))
             pb.append_move(3, (ctx, s) => moveAndCollide(ctx, s, -1, 0))
 
-            // box_moves.build(pb)
+            box_moves.build(pb)
 
             pb.set_win_check((ctx, s) => {
                 let goals = ctx.get_enum("lv_goals")

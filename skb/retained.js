@@ -154,26 +154,32 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 onKeydown = (evt) => {
     console.log(evt, "DOWN")
-    if (evt === "ArrowUp") {
+    if (evt === "KeyW") {
         if (pg.move(0)) {
             update_char_pos()
             update_boxes_pos()
         }
     }
-    if (evt === "ArrowRight") {
+    if (evt === "KeyD") {
         if (pg.move(1)) {
             update_char_pos()
             update_boxes_pos()
         }
     }
-    if (evt === "ArrowDown") {
+    if (evt === "KeyS") {
         if (pg.move(2)) {
             update_char_pos()
             update_boxes_pos()
         }
     }
-    if (evt === "ArrowLeft") {
+    if (evt === "KeyA") {
         if (pg.move(3)) {
+            update_char_pos()
+            update_boxes_pos()
+        }
+    }
+    if (evt === "KeyR") {
+        if (pg.rewind()) {
             update_char_pos()
             update_boxes_pos()
         }
