@@ -5,6 +5,16 @@ import {lv2} from "./levels/lv2.js"
 import {lv3} from "./levels/lv3.js"
 import {lv4} from "./levels/lv4.js"
 import {lv5} from "./levels/lv5.js"
+import {lv6} from "./levels/lv6.js"
+import {lv7} from "./levels/lv7.js"
+import {lv8} from "./levels/lv8.js"
+import {lv9} from "./levels/lv9.js"
+import {lv10} from "./levels/lv10.js"
+import {lv11} from "./levels/lv11.js"
+import {lv12} from "./levels/lv12.js"
+import {lv13} from "./levels/lv13.js"
+import {lv14} from "./levels/lv14.js"
+import {lv15} from "./levels/lv15.js"
 import SD from "./skb_drawer.js"
 
 (() => {
@@ -41,11 +51,7 @@ document.addEventListener("keyup", handleKeyup)
 
 const skb = new SKB()
 const lvs = [
-    lv1,
-    lv2,
-    lv3,
-    lv4,
-    lv5
+    lv15
 ]
 let lvidx = 0
 let [result, p] = skb.build(skb_box_rules, lvs[lvidx])

@@ -67,10 +67,8 @@ const next_level = () => {
             const dy = y1 - y0
             const d = Math.sqrt(dx * dx + dy * dy)
             const f = d * 0.11
-            console.log(f)
             set_camera_focus_target((x0 + x1) * 0.5 + 0.5, 0, (y0 + y1) * 0.5 + 0.5, f, f)
         }
-        console.log(pre_preparing_state)
         won = false
         return true
     }
