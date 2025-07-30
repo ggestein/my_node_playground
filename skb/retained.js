@@ -59,6 +59,8 @@ const material_z = new THREE.MeshNormalMaterial();
 const mesh_z = new THREE.Mesh( geometry_z, material_z );
 scene.add(mesh_z)
 const wec = we.count()
+let height_animation_info_pre = []
+let height_animation_info_post = null
 for (let i = 0; i < wec; i++) {
     const x = we.get(i).g("x")
     const y = we.get(i).g("y")
@@ -67,6 +69,7 @@ for (let i = 0; i < wec; i++) {
     const mesh = new THREE.Mesh(geo, mat)
     mesh.position.set(x + 0.5, 0.5, y + 0.5)
     scene.add(mesh)
+    height_animation_info_pre.push([0.5, mesh])
 }
 const gec = ge.count()
 for (let i = 0; i < gec; i++) {
@@ -78,6 +81,7 @@ for (let i = 0; i < gec; i++) {
     mesh.position.set(x + 0.5, 0.05, y + 0.5)
     mesh.scale.set(1, 0.1, 1)
     scene.add(mesh)
+    height_animation_info_pre.push([0.05, mesh])
 }
 let box_map = new Object()
 const update_boxes_pos = () => {
@@ -98,6 +102,7 @@ for (let k in sit.boxes) {
     mesh.scale.set(0.9, 0.8, 0.9)
     scene.add(mesh)
     box_map[k] = mesh
+    height_animation_info_pre.push([0.4, mesh])
 }
 update_boxes_pos()
 
@@ -285,8 +290,11 @@ const pg_move_callback = (m, ps, ns) => {
 
 // controlling
 const move_duration = 0.24
-const winning_duration = 3.4
+const preparing_duration = 1.5
+const winning_duration = 4.9
 const input_cd = 0.1
+let pre_preparing_state = {}
+let preparing_state = null
 let preparing_moving_state = null
 let moving_state = null
 let winning_state = null
@@ -297,10 +305,47 @@ let left_pressing = false
 let last_input_time = 0
 let won = false
 const controlling_tick = (time) => {
-    if (winning_state !== null) {
-        if (time - winning_state.base_time > winning_duration) {
+    if (preparing_state != null) {
+        const dt = time - preparing_state.base_time
+        if (dt > preparing_duration) {
+            preparing_state = null
+            update_char_action("Idle")
+            for (let i = 0; i < height_animation_info_pre.length; i++) {
+                height_animation_info_pre[i][1].position.y = height_animation_info_pre[i][0]
+            }
+        } else {
+            for (let i = 0; i < height_animation_info_pre.length; i++) {
+                let dist = height_animation_info_pre[i][1].position.x * height_animation_info_pre[i][1].position.x
+                dist += height_animation_info_pre[i][1].position.z * height_animation_info_pre[i][1].position.z
+                dist = Math.sqrt(dist)
+                let r = dt / preparing_duration * 12 - dist * 1.1 + 0.2
+                if (r > 1) {
+                    r = 1
+                }
+                r = (1 - r) * (1 - r) * (1 - r)
+                height_animation_info_pre[i][1].position.y = height_animation_info_pre[i][0] + 10 * r
+            }
+        }
+    } else if (winning_state !== null) {
+        let dt = time - winning_state.base_time
+        if (dt > winning_duration) {
             winning_state = null
             update_char_action("Idle")
+        } else {
+            if (dt > 3.4) {
+                dt = dt - 3.4
+                for (let i = 0; i < height_animation_info_post.length; i++) {
+                    let dist = height_animation_info_post[i][1].position.x * height_animation_info_post[i][1].position.x
+                    dist += height_animation_info_post[i][1].position.z * height_animation_info_post[i][1].position.z
+                    dist = Math.sqrt(dist)
+                    let r = dt / preparing_duration * 12 - dist * 1.1 + 0.2
+                    if (r < 0) {
+                        r = 0
+                    }
+                    r = r * r * r
+                    height_animation_info_post[i][1].position.y = height_animation_info_post[i][0] + 10 * r
+                }
+            }
         }
     } else if (moving_state !== null) {
         const bt = moving_state.base_time
@@ -336,6 +381,8 @@ const controlling_tick = (time) => {
                     update_char_rot(0)
                     update_char_action("Dance")
                     need_idle = false
+                    height_animation_info_post = height_animation_info_pre
+                    height_animation_info_pre = []
                 }
             }
             if (need_idle) {
@@ -343,8 +390,12 @@ const controlling_tick = (time) => {
             }
         }
     } else {
-        if (preparing_moving_state != null)
-        {
+        if (pre_preparing_state != null) {
+            preparing_state = pre_preparing_state
+            pre_preparing_state = null
+            preparing_state.base_time = time
+        }
+        if (preparing_moving_state != null) {
             moving_state = preparing_moving_state
             preparing_moving_state = null
             moving_state.base_time = time
