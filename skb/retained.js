@@ -44,7 +44,14 @@ const next_level = () => {
         we = pc.get_enum("lv_walls")
         ge = pc.get_enum("lv_goals")
         setup_current_level()
-        pre_preparing_state = {}
+        const [csitr, csit] = pg.cur_sdata()
+        pre_preparing_state = {
+            player_next_pos: [csit.player.x + 0.5, csit.player.y + 0.5]
+        }
+        if (char_model) {
+            pre_preparing_state.player_prev_pos = [char_model.position.x, char_model.position.z]
+        }
+        console.log(pre_preparing_state)
         won = false
     }
 }
@@ -83,13 +90,17 @@ scene.add(mesh_z)
 let height_animation_info_pre = []
 let height_animation_info_post = null
 let box_map = null
-const update_boxes_pos = () => {
+const update_boxes_pos = (override_y) => {
     const [csitr, csit] = pg.cur_sdata()
     for (let k in box_map) {
         const v = csit.boxes[k]
         const x = v.x
         const y = v.y
-        box_map[k].position.set(x + 0.5, 0.4, y + 0.5)
+        let height = 0.4
+        if (override_y) {
+            height = override_y
+        }
+        box_map[k].position.set(x + 0.5, height, y + 0.5)
     }
 }
 const setup_current_level = () => {
@@ -101,7 +112,7 @@ const setup_current_level = () => {
         const geo = new THREE.BoxGeometry( 1, 1, 1)
         const mat = new THREE.MeshNormalMaterial();
         const mesh = new THREE.Mesh(geo, mat)
-        mesh.position.set(x + 0.5, 0.5, y + 0.5)
+        mesh.position.set(x + 0.5, 100.0, y + 0.5)
         scene.add(mesh)
         height_animation_info_pre.push([0.5, mesh])
     }
@@ -112,7 +123,7 @@ const setup_current_level = () => {
         const geo = new THREE.BoxGeometry( 1, 1, 1)
         const mat = new THREE.MeshNormalMaterial();
         const mesh = new THREE.Mesh(geo, mat)
-        mesh.position.set(x + 0.5, 0.05, y + 0.5)
+        mesh.position.set(x + 0.5, 100.0, y + 0.5)
         mesh.scale.set(1, 0.1, 1)
         scene.add(mesh)
         height_animation_info_pre.push([0.05, mesh])
@@ -128,7 +139,7 @@ const setup_current_level = () => {
         box_map[k] = mesh
         height_animation_info_pre.push([0.4, mesh])
     }
-    update_boxes_pos()
+    update_boxes_pos(100)
 }
 
 
@@ -161,7 +172,6 @@ const loader = new GLTFLoader()
 loader.load("models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
     char_model = gltf.scene
     char_model.scale.set(0.36, 0.36, 0.36)
-    update_char_pos()
     scene.add(gltf.scene)
     char_mixer = new THREE.AnimationMixer(char_model)
     for (let i = 0; i < gltf.animations.length; i++) {
@@ -349,6 +359,29 @@ const controlling_tick = (time) => {
                 }
                 r = (1 - r) * (1 - r) * (1 - r)
                 height_animation_info_pre[i][1].position.y = height_animation_info_pre[i][0] + 10 * r
+            }
+            if (char_model)
+            {
+                const f = (x, z) => {
+                    char_model.position.set(x, 0, z)
+                }
+                if (preparing_state.player_prev_pos) {
+                    let cr = dt
+                    if (cr > 1) {
+                        cr = 1
+                    }
+                    cr = 1 - (1 - cr) * (1 - cr) * (1 - cr)
+                    f (
+                        lerp(preparing_state.player_prev_pos[0], preparing_state.player_next_pos[0], cr),
+                        lerp(preparing_state.player_prev_pos[1], preparing_state.player_next_pos[1], cr)
+                    )
+                } else {
+                    f (
+                        preparing_state.player_next_pos[0],
+                        preparing_state.player_next_pos[1]
+                    )
+                    // char_model.position.set(preparing_state.player_next_pos[0], 0, preparing_state.player_next_pos[1])
+                }
             }
         }
     } else if (winning_state !== null) {
