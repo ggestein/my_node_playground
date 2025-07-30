@@ -18,15 +18,37 @@ const lerp = (a, b, t) => {
 
 
 // SKB init
-
-const lv = lv4
+const lvs = [
+    lv1,
+    lv2,
+    lv3,
+    lv4,
+    lv5
+]
+let lvi = -1
+let p = null
+let pg = null
+let we = null
+let ge = null
+let pc = null
+const next_level = () => {
+    const nlvi = lvi + 1
+    if (nlvi < lvs.length) {
+        lvi = nlvi
+        const lv = lvs[lvi]
+        let [br, np] = skb.build(skb_box_rules, lv)
+        p = np
+        let [sr, sid] = p.parse_situation_id(lv.start)
+        pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
+        pc = pg.get_context();
+        we = pc.get_enum("lv_walls")
+        ge = pc.get_enum("lv_goals")
+        setup_current_level()
+        pre_preparing_state = {}
+        won = false
+    }
+}
 let skb = new SKB()
-let [br, p] = skb.build(skb_box_rules, lv)
-let [sr, sid] = p.parse_situation_id(lv.start)
-let pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
-let pc = pg.get_context();
-let we = pc.get_enum("lv_walls")
-let ge = pc.get_enum("lv_goals")
 
 
 //  scene initialization with THREE
@@ -58,32 +80,9 @@ const geometry_z = new THREE.BoxGeometry( 0.05, 0.05, 1000 );
 const material_z = new THREE.MeshNormalMaterial();
 const mesh_z = new THREE.Mesh( geometry_z, material_z );
 scene.add(mesh_z)
-const wec = we.count()
 let height_animation_info_pre = []
 let height_animation_info_post = null
-for (let i = 0; i < wec; i++) {
-    const x = we.get(i).g("x")
-    const y = we.get(i).g("y")
-    const geo = new THREE.BoxGeometry( 1, 1, 1)
-    const mat = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.position.set(x + 0.5, 0.5, y + 0.5)
-    scene.add(mesh)
-    height_animation_info_pre.push([0.5, mesh])
-}
-const gec = ge.count()
-for (let i = 0; i < gec; i++) {
-    const x = ge.get(i).g("x")
-    const y = ge.get(i).g("y")
-    const geo = new THREE.BoxGeometry( 1, 1, 1)
-    const mat = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.position.set(x + 0.5, 0.05, y + 0.5)
-    mesh.scale.set(1, 0.1, 1)
-    scene.add(mesh)
-    height_animation_info_pre.push([0.05, mesh])
-}
-let box_map = new Object()
+let box_map = null
 const update_boxes_pos = () => {
     const [csitr, csit] = pg.cur_sdata()
     for (let k in box_map) {
@@ -93,18 +92,44 @@ const update_boxes_pos = () => {
         box_map[k].position.set(x + 0.5, 0.4, y + 0.5)
     }
 }
-const [sitr, sit] = pg.cur_sdata()
-for (let k in sit.boxes) {
-    const v = sit.boxes[k]
-    const geo = new THREE.BoxGeometry( 1, 1, 1)
-    const mat = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.scale.set(0.9, 0.8, 0.9)
-    scene.add(mesh)
-    box_map[k] = mesh
-    height_animation_info_pre.push([0.4, mesh])
+const setup_current_level = () => {
+    box_map = new Object()
+    const wec = we.count()
+    for (let i = 0; i < wec; i++) {
+        const x = we.get(i).g("x")
+        const y = we.get(i).g("y")
+        const geo = new THREE.BoxGeometry( 1, 1, 1)
+        const mat = new THREE.MeshNormalMaterial();
+        const mesh = new THREE.Mesh(geo, mat)
+        mesh.position.set(x + 0.5, 0.5, y + 0.5)
+        scene.add(mesh)
+        height_animation_info_pre.push([0.5, mesh])
+    }
+    const gec = ge.count()
+    for (let i = 0; i < gec; i++) {
+        const x = ge.get(i).g("x")
+        const y = ge.get(i).g("y")
+        const geo = new THREE.BoxGeometry( 1, 1, 1)
+        const mat = new THREE.MeshNormalMaterial();
+        const mesh = new THREE.Mesh(geo, mat)
+        mesh.position.set(x + 0.5, 0.05, y + 0.5)
+        mesh.scale.set(1, 0.1, 1)
+        scene.add(mesh)
+        height_animation_info_pre.push([0.05, mesh])
+    }
+    const [sitr, sit] = pg.cur_sdata()
+    for (let k in sit.boxes) {
+        const v = sit.boxes[k]
+        const geo = new THREE.BoxGeometry( 1, 1, 1)
+        const mat = new THREE.MeshNormalMaterial();
+        const mesh = new THREE.Mesh(geo, mat)
+        mesh.scale.set(0.9, 0.8, 0.9)
+        scene.add(mesh)
+        box_map[k] = mesh
+        height_animation_info_pre.push([0.4, mesh])
+    }
+    update_boxes_pos()
 }
-update_boxes_pos()
 
 
 // models & animations
@@ -293,7 +318,7 @@ const move_duration = 0.24
 const preparing_duration = 1.5
 const winning_duration = 4.9
 const input_cd = 0.1
-let pre_preparing_state = {}
+let pre_preparing_state = null
 let preparing_state = null
 let preparing_moving_state = null
 let moving_state = null
@@ -331,6 +356,10 @@ const controlling_tick = (time) => {
         if (dt > winning_duration) {
             winning_state = null
             update_char_action("Idle")
+            for (let i = 0; i < height_animation_info_post.length; i++) {
+                scene.remove(height_animation_info_post[i][1])
+            }
+            next_level()
         } else {
             if (dt > 3.4) {
                 dt = dt - 3.4
@@ -445,3 +474,5 @@ function animate( time ) {
 	renderer.render( scene, camera );
     prev_time = time_sec
 }
+
+next_level()
