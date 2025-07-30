@@ -51,6 +51,30 @@ const next_level = () => {
         if (char_model) {
             pre_preparing_state.player_prev_pos = [char_model.position.x, char_model.position.z]
         }
+        const wec = we.count()
+        let x0 = null
+        let x1 = null
+        let y0 = null
+        let y1 = null
+        for (let i = 0; i < wec; i++) {
+            const x = we.get(i).g("x")
+            const y = we.get(i).g("y")
+            if (x0 === null || x0 > x) {
+                x0 = x
+            }
+            if (x1 === null || x1 < x) {
+                x1 = x
+            }
+            if (y0 === null || y0 > y) {
+                y0 = y
+            }
+            if (y1 === null || y1 < y) {
+                y1 = y
+            }
+        }
+        if (x0 !== null && x1 !== null && y0 !== null && y1 !== null) {
+            set_camera_focus_target((x0 + x1) * 0.5 + 0.5, 0, (y0 + y1) * 0.5 + 0.5)
+        }
         console.log(pre_preparing_state)
         won = false
     }
@@ -65,15 +89,40 @@ const height = 540
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 1000 );
-let camera_focus = [3, 3, 3]
+let camera_focus = [3, 0, 3]
+let camera_focus_target = [3, 0, 3]
+let camera_easing = false
 const set_camera_focus = (x, y, z) => {
     camera_focus[0] = x
     camera_focus[1] = y
     camera_focus[2] = z
-    camera.position.set( 0 + x, 12 + y, 5 + z );
+    camera.position.set( 0 + x, 10 + y, 4 + z );
     camera.lookAt( x, y, z );
 }
-set_camera_focus(2, 0, 2);
+set_camera_focus(3, 0, 3);
+const set_camera_focus_target = (x, y, z) => {
+    camera_focus_target = [x, y, z]
+    camera_easing = true
+}
+const update_camera = (dt) => {
+    if (camera_easing) {
+        let nx = camera_focus[0] + (camera_focus_target[0] - camera_focus[0]) * dt * 2
+        let ny = camera_focus[1] + (camera_focus_target[1] - camera_focus[1]) * dt * 2
+        let nz = camera_focus[2] + (camera_focus_target[2] - camera_focus[2]) * dt * 2
+        if (
+            Math.abs(nx - camera_focus_target[0]) < 0.0001 &&
+            Math.abs(ny - camera_focus_target[1]) < 0.0001 &&
+            Math.abs(nz - camera_focus_target[2]) < 0.0001
+        ) {
+            nx = camera_focus_target[0]
+            ny = camera_focus_target[1]
+            nz = camera_focus_target[2]
+            camera_easing = true
+        }
+        set_camera_focus(nx, ny, nz)
+    }
+}
+/*
 const geometry_x = new THREE.BoxGeometry( 1000, 0.05, 0.05 );
 const material_x = new THREE.MeshNormalMaterial();
 const mesh_x = new THREE.Mesh( geometry_x, material_x );
@@ -87,6 +136,7 @@ const geometry_z = new THREE.BoxGeometry( 0.05, 0.05, 1000 );
 const material_z = new THREE.MeshNormalMaterial();
 const mesh_z = new THREE.Mesh( geometry_z, material_z );
 scene.add(mesh_z)
+*/
 let height_animation_info_pre = []
 let height_animation_info_post = null
 let box_map = null
@@ -201,7 +251,7 @@ const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.Me
 mesh.rotation.x = - Math.PI / 2;
 scene.add( mesh );
 
-const grid = new THREE.GridHelper( 20, 20, 0x000000, 0x000000 );
+const grid = new THREE.GridHelper( 50, 50, 0x000000, 0x000000 );
 grid.material.opacity = 0.2;
 grid.material.transparent = true;
 scene.add( grid );
@@ -497,6 +547,7 @@ function animate( time ) {
     if (char_mixer) {
         char_mixer.update(dt)
     }
+    update_camera(dt)
     
     /*
     if (char_model) {
