@@ -2,11 +2,14 @@
 
 import SKB from "./skb.js"
 import {skb_box_rules} from "./skb_box_rules.js"
+/*
 import {lv1} from "./levels/lv1.js"
 import {lv2} from "./levels/lv2.js"
 import {lv3} from "./levels/lv3.js"
 import {lv4} from "./levels/lv4.js"
 import {lv5} from "./levels/lv5.js"
+*/
+import { all_levels } from "./levels/all_levels.js"
 import * as THREE from "./three.module.js"
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
 
@@ -18,13 +21,7 @@ const lerp = (a, b, t) => {
 
 
 // SKB init
-const lvs = [
-    lv1,
-    lv2,
-    lv3,
-    lv4,
-    lv5
-]
+const lvs = all_levels
 let lvi = -1
 let p = null
 let pg = null
