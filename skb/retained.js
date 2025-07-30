@@ -16,7 +16,7 @@ import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
 let skb = new SKB()
 let [br, p] = skb.build(skb_box_rules, lv1)
 let [sr, sid] = p.parse_situation_id(lv1.start)
-let pg = p.start(sid)
+let pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
 let pc = pg.get_context();
 console.log("PG", pg)
 console.log("PC", pc)
@@ -39,7 +39,7 @@ const set_camera_focus = (x, y, z) => {
     camera.position.set( 0 + x, 12 + y, 5 + z );
     camera.lookAt( x, y, z );
 }
-set_camera_focus(0, 0, 0);
+set_camera_focus(2, 0, 2);
 const geometry_x = new THREE.BoxGeometry( 1000, 0.05, 0.05 );
 const material_x = new THREE.MeshNormalMaterial();
 const mesh_x = new THREE.Mesh( geometry_x, material_x );
@@ -91,6 +91,9 @@ let char_model = undefined
 const update_char_pos = () => {
     const [csitr, csit] = pg.cur_sdata()
     char_model.position.set(csit.player.x + 0.5, 0, csit.player.y + 0.5)
+}
+const update_char_rot = (face) => {
+    char_model.rotation.y = face * (Math.PI / 2)
 }
 const loader = new GLTFLoader()
 loader.load("models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
@@ -187,6 +190,39 @@ onKeydown = (evt) => {
 }
 onKeyup = (evt) => {
     console.log(evt, "UP")
+}
+
+
+// PG events
+const pg_move_callback = (m, ps, ns) => {
+    console.log(m, ps, ns)
+    let face = -1
+    if (ns !== undefined) {
+        if (ns.player.x == ps.player.x) {
+            if (ns.player.y < ps.player.y) {
+                face = 2
+            } else if (ns.player.y > ps.player.y) {
+                face = 0
+            }
+        } else if (ns.player.y == ps.player.y) {
+            if (ns.player.x < ps.player.x) {
+                face = 3
+            } else if (ns.player.x > ps.player.x) {
+                face = 1
+            }
+        }
+    } else if (m !== undefined) {
+        if (m == 0) {
+            face = 2
+        } else if (m == 2) {
+            face = 0
+        } else {
+            face = m
+        }
+    }
+    if (face != -1) {
+        update_char_rot(face)
+    }
 }
 
 
