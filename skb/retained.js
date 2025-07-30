@@ -11,11 +11,18 @@ import * as THREE from "./three.module.js"
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
 
 
+// math
+const lerp = (a, b, t) => {
+    return a * (1 - t) + b * t
+}
+
+
 // SKB init
 
+const lv = lv1
 let skb = new SKB()
-let [br, p] = skb.build(skb_box_rules, lv1)
-let [sr, sid] = p.parse_situation_id(lv1.start)
+let [br, p] = skb.build(skb_box_rules, lv)
+let [sr, sid] = p.parse_situation_id(lv.start)
 let pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
 let pc = pg.get_context();
 console.log("PG", pg)
@@ -158,28 +165,16 @@ document.addEventListener("keyup", handleKeyup)
 onKeydown = (evt) => {
     console.log(evt, "DOWN")
     if (evt === "KeyW") {
-        if (pg.move(0)) {
-            update_char_pos()
-            update_boxes_pos()
-        }
+        up_pressing = true
     }
     if (evt === "KeyD") {
-        if (pg.move(1)) {
-            update_char_pos()
-            update_boxes_pos()
-        }
+        right_pressing = true
     }
     if (evt === "KeyS") {
-        if (pg.move(2)) {
-            update_char_pos()
-            update_boxes_pos()
-        }
+        down_pressing = true
     }
     if (evt === "KeyA") {
-        if (pg.move(3)) {
-            update_char_pos()
-            update_boxes_pos()
-        }
+        left_pressing = true
     }
     if (evt === "KeyR") {
         if (pg.rewind()) {
@@ -190,6 +185,18 @@ onKeydown = (evt) => {
 }
 onKeyup = (evt) => {
     console.log(evt, "UP")
+    if (evt === "KeyW") {
+        up_pressing = false
+    }
+    if (evt === "KeyD") {
+        right_pressing = false
+    }
+    if (evt === "KeyS") {
+        down_pressing = false
+    }
+    if (evt === "KeyA") {
+        left_pressing = false
+    }
 }
 
 
@@ -220,8 +227,89 @@ const pg_move_callback = (m, ps, ns) => {
             face = m
         }
     }
+    if (ns !== undefined) {
+        preparing_moving_state = {
+            player: [
+                [ps.player.x + 0.5, 0, ps.player.y + 0.5],
+                [ns.player.x + 0.5, 0, ns.player.y + 0.5]
+            ],
+            boxes: []
+        }
+        for (let k in ns.boxes) {
+            const v0 = ps.boxes[k]
+            const v1 = ns.boxes[k]
+            if (v0.x != v1.x || v0.y != v1.y) {
+                preparing_moving_state.boxes[k] = [
+                    [v0.x + 0.5, 0.4, v0.y + 0.5],
+                    [v1.x + 0.5, 0.4, v1.y + 0.5]
+                ]
+            }
+        }
+    }
     if (face != -1) {
         update_char_rot(face)
+    }
+}
+
+
+// controlling
+const move_duration = 0.4
+const input_cd = 0.2
+let preparing_moving_state = null
+let moving_state = null
+let up_pressing = false
+let right_pressing = false
+let down_pressing = false
+let left_pressing = false
+let last_input_time = 0
+const controlling_tick = (time) => {
+    if (moving_state !== null) {
+        const bt = moving_state.base_time
+        const dt = time - bt
+        let r = dt / move_duration
+        const em = r >= 1.0
+        if (em) {
+            r = 1.0
+        }
+        char_model.position.set(
+            lerp(moving_state.player[0][0], moving_state.player[1][0], r),
+            lerp(moving_state.player[0][1], moving_state.player[1][1], r),
+            lerp(moving_state.player[0][2], moving_state.player[1][2], r)
+        )
+        for (let k in moving_state.boxes) {
+            const v = moving_state.boxes[k]
+            box_map[k].position.set(
+                lerp(v[0][0], v[1][0], r),
+                lerp(v[0][1], v[1][1], r),
+                lerp(v[0][2], v[1][2], r)
+            )
+        }
+        if (em) {
+            moving_state = null
+        }
+    } else {
+        if (preparing_moving_state != null)
+        {
+            moving_state = preparing_moving_state
+            preparing_moving_state = null
+            moving_state.base_time = time
+        } else {
+            if (time - last_input_time > input_cd) {
+                if (up_pressing) {
+                    pg.move(0)
+                    last_input_time = time
+                } else if (right_pressing) {
+                    pg.move(1)
+                    last_input_time = time
+                } else if (down_pressing) {
+                    pg.move(2)
+                    last_input_time = time
+                } else if (left_pressing) {
+                    pg.move(3)
+                    last_input_time = time
+                }
+            }
+        }
     }
 }
 
@@ -231,7 +319,7 @@ const pg_move_callback = (m, ps, ns) => {
 function animate( time ) {
 
     const time_sec = time * 0.001
-
+    controlling_tick(time_sec)
     /*
     if (char_model) {
         char_model.position.set(0, 0, time_sec)
