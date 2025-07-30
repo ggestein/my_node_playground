@@ -19,7 +19,7 @@ const lerp = (a, b, t) => {
 
 // SKB init
 
-const lv = lv1
+const lv = lv3
 let skb = new SKB()
 let [br, p] = skb.build(skb_box_rules, lv)
 let [sr, sid] = p.parse_situation_id(lv.start)
@@ -93,8 +93,11 @@ for (let k in sit.boxes) {
 update_boxes_pos()
 
 
-// models
+// models & animations
 let char_model = undefined
+let char_mixer = undefined
+let char_actions = new Object()
+let playing_action_name = undefined
 const update_char_pos = () => {
     const [csitr, csit] = pg.cur_sdata()
     char_model.position.set(csit.player.x + 0.5, 0, csit.player.y + 0.5)
@@ -102,12 +105,33 @@ const update_char_pos = () => {
 const update_char_rot = (face) => {
     char_model.rotation.y = face * (Math.PI / 2)
 }
+const update_char_action = (name) => {
+    const action = char_actions[name]
+    if (action) {
+        if (playing_action_name) {
+            const playing_action = char_actions[playing_action_name]
+            if (playing_action) {
+                playing_action.stop()
+            }
+        }
+        action.play()
+        playing_action_name = name
+    }
+}
 const loader = new GLTFLoader()
 loader.load("models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
     char_model = gltf.scene
     char_model.scale.set(0.36, 0.36, 0.36)
     update_char_pos()
     scene.add(gltf.scene)
+    console.log(gltf.animations)
+    char_mixer = new THREE.AnimationMixer(char_model)
+    for (let i = 0; i < gltf.animations.length; i++) {
+        const clip = gltf.animations[i]
+        char_actions[clip.name] = char_mixer.clipAction(clip)
+    }
+    console.log(char_actions)
+    update_char_action("Idle")
 }, undefined, (err) => {
     console.log(`FAILED TO LOAD GLTF: ${err}`)
 })
@@ -178,6 +202,7 @@ onKeydown = (evt) => {
     }
     if (evt === "KeyR") {
         if (pg.rewind()) {
+            moving_state = null
             update_char_pos()
             update_boxes_pos()
         }
@@ -227,34 +252,36 @@ const pg_move_callback = (m, ps, ns) => {
             face = m
         }
     }
-    if (ns !== undefined) {
-        preparing_moving_state = {
-            player: [
-                [ps.player.x + 0.5, 0, ps.player.y + 0.5],
-                [ns.player.x + 0.5, 0, ns.player.y + 0.5]
-            ],
-            boxes: []
-        }
-        for (let k in ns.boxes) {
-            const v0 = ps.boxes[k]
-            const v1 = ns.boxes[k]
-            if (v0.x != v1.x || v0.y != v1.y) {
-                preparing_moving_state.boxes[k] = [
-                    [v0.x + 0.5, 0.4, v0.y + 0.5],
-                    [v1.x + 0.5, 0.4, v1.y + 0.5]
-                ]
-            }
-        }
-    }
     if (face != -1) {
         update_char_rot(face)
+    }
+    if (m !== undefined) {
+        if (ns !== undefined) {
+            preparing_moving_state = {
+                player: [
+                    [ps.player.x + 0.5, 0, ps.player.y + 0.5],
+                    [ns.player.x + 0.5, 0, ns.player.y + 0.5]
+                ],
+                boxes: []
+            }
+            for (let k in ns.boxes) {
+                const v0 = ps.boxes[k]
+                const v1 = ns.boxes[k]
+                if (v0.x != v1.x || v0.y != v1.y) {
+                    preparing_moving_state.boxes[k] = [
+                        [v0.x + 0.5, 0.4, v0.y + 0.5],
+                        [v1.x + 0.5, 0.4, v1.y + 0.5]
+                    ]
+                }
+            }
+        }
     }
 }
 
 
 // controlling
-const move_duration = 0.4
-const input_cd = 0.2
+const move_duration = 0.24
+const input_cd = 0.1
 let preparing_moving_state = null
 let moving_state = null
 let up_pressing = false
@@ -271,6 +298,7 @@ const controlling_tick = (time) => {
         if (em) {
             r = 1.0
         }
+        r = 1 - (1 - r) * (1 - r) * (1 - r)
         char_model.position.set(
             lerp(moving_state.player[0][0], moving_state.player[1][0], r),
             lerp(moving_state.player[0][1], moving_state.player[1][1], r),
@@ -286,6 +314,7 @@ const controlling_tick = (time) => {
         }
         if (em) {
             moving_state = null
+            update_char_action("Idle")
         }
     } else {
         if (preparing_moving_state != null)
@@ -293,6 +322,7 @@ const controlling_tick = (time) => {
             moving_state = preparing_moving_state
             preparing_moving_state = null
             moving_state.base_time = time
+            update_char_action("Walking")
         } else {
             if (time - last_input_time > input_cd) {
                 if (up_pressing) {
@@ -316,10 +346,19 @@ const controlling_tick = (time) => {
 
 // animation
 
+let prev_time = null
 function animate( time ) {
 
     const time_sec = time * 0.001
+    let dt = 0
+    if (prev_time !== null) {
+        dt = time_sec - prev_time
+    }
     controlling_tick(time_sec)
+    if (char_mixer) {
+        char_mixer.update(dt)
+    }
+    
     /*
     if (char_model) {
         char_model.position.set(0, 0, time_sec)
@@ -327,5 +366,5 @@ function animate( time ) {
     */
 
 	renderer.render( scene, camera );
-
+    prev_time = time_sec
 }
