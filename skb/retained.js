@@ -2,13 +2,6 @@
 
 import SKB from "./skb.js"
 import {skb_box_rules} from "./skb_box_rules.js"
-/*
-import {lv1} from "./levels/lv1.js"
-import {lv2} from "./levels/lv2.js"
-import {lv3} from "./levels/lv3.js"
-import {lv4} from "./levels/lv4.js"
-import {lv5} from "./levels/lv5.js"
-*/
 import { all_levels } from "./levels/all_levels.js"
 import * as THREE from "./three.module.js"
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
@@ -70,11 +63,18 @@ const next_level = () => {
             }
         }
         if (x0 !== null && x1 !== null && y0 !== null && y1 !== null) {
-            set_camera_focus_target((x0 + x1) * 0.5 + 0.5, 0, (y0 + y1) * 0.5 + 0.5)
+            const dx = x1 - x0
+            const dy = y1 - y0
+            const d = Math.sqrt(dx * dx + dy * dy)
+            const f = d * 0.11
+            console.log(f)
+            set_camera_focus_target((x0 + x1) * 0.5 + 0.5, 0, (y0 + y1) * 0.5 + 0.5, f, f)
         }
         console.log(pre_preparing_state)
         won = false
+        return true
     }
+    return false
 }
 let skb = new SKB()
 
@@ -88,17 +88,25 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 1000 );
 let camera_focus = [3, 0, 3]
 let camera_focus_target = [3, 0, 3]
+let camera_distance_factor_y = 1
+let camera_distance_factor_z = 1
+let camera_distance_factor_target_y = 1
+let camera_distance_factor_target_z = 1
 let camera_easing = false
-const set_camera_focus = (x, y, z) => {
+const set_camera_focus = (x, y, z, fy, fz) => {
     camera_focus[0] = x
     camera_focus[1] = y
     camera_focus[2] = z
-    camera.position.set( 0 + x, 10 + y, 4 + z );
+    camera_distance_factor_y = fy
+    camera_distance_factor_z = fz
+    camera.position.set( 0 + x, 10 * camera_distance_factor_y + y, 4 * camera_distance_factor_z + z );
     camera.lookAt( x, y, z );
 }
-set_camera_focus(3, 0, 3);
-const set_camera_focus_target = (x, y, z) => {
+set_camera_focus(3, 0, 3, 1, 1);
+const set_camera_focus_target = (x, y, z, fy, fz) => {
     camera_focus_target = [x, y, z]
+    camera_distance_factor_target_y = fy
+    camera_distance_factor_target_z = fz
     camera_easing = true
 }
 const update_camera = (dt) => {
@@ -106,17 +114,23 @@ const update_camera = (dt) => {
         let nx = camera_focus[0] + (camera_focus_target[0] - camera_focus[0]) * dt * 2
         let ny = camera_focus[1] + (camera_focus_target[1] - camera_focus[1]) * dt * 2
         let nz = camera_focus[2] + (camera_focus_target[2] - camera_focus[2]) * dt * 2
+        let nfy = camera_distance_factor_y + (camera_distance_factor_target_y - camera_distance_factor_y) * dt * 2
+        let nfz = camera_distance_factor_z + (camera_distance_factor_target_z - camera_distance_factor_z) * dt * 2
         if (
             Math.abs(nx - camera_focus_target[0]) < 0.0001 &&
             Math.abs(ny - camera_focus_target[1]) < 0.0001 &&
-            Math.abs(nz - camera_focus_target[2]) < 0.0001
+            Math.abs(nz - camera_focus_target[2]) < 0.0001 &&
+            Math.abs(nfy - camera_distance_factor_target_y) < 0.0001 &&
+            Math.abs(nfz - camera_distance_factor_target_z) < 0.0001
         ) {
             nx = camera_focus_target[0]
             ny = camera_focus_target[1]
             nz = camera_focus_target[2]
+            nfy = camera_distance_factor_target_y
+            nfz = camera_distance_factor_target_z
             camera_easing = true
         }
-        set_camera_focus(nx, ny, nz)
+        set_camera_focus(nx, ny, nz, nfy, nfz)
     }
 }
 /*
@@ -150,6 +164,9 @@ const update_boxes_pos = (override_y) => {
         box_map[k].position.set(x + 0.5, height, y + 0.5)
     }
 }
+const crate_texture = new THREE.TextureLoader().load("textures/crate.gif")
+crate_texture.colorSpace = THREE.SRGBColorSpace
+
 const setup_current_level = () => {
     box_map = new Object()
     const wec = we.count()
@@ -168,10 +185,10 @@ const setup_current_level = () => {
         const x = ge.get(i).g("x")
         const y = ge.get(i).g("y")
         const geo = new THREE.BoxGeometry( 1, 1, 1)
-        const mat = new THREE.MeshNormalMaterial();
+        const mat = new THREE.MeshBasicMaterial( {color: 0xff00ff} );
         const mesh = new THREE.Mesh(geo, mat)
         mesh.position.set(x + 0.5, 100.0, y + 0.5)
-        mesh.scale.set(1, 0.1, 1)
+        mesh.scale.set(0.6, 0.1, 0.6)
         scene.add(mesh)
         height_animation_info_pre.push([0.05, mesh])
     }
@@ -179,9 +196,9 @@ const setup_current_level = () => {
     for (let k in sit.boxes) {
         const v = sit.boxes[k]
         const geo = new THREE.BoxGeometry( 1, 1, 1)
-        const mat = new THREE.MeshNormalMaterial();
+        // const mat = new THREE.MeshNormalMaterial();
+        const mat = new THREE.MeshBasicMaterial( { map: crate_texture} )
         const mesh = new THREE.Mesh(geo, mat)
-        mesh.scale.set(0.9, 0.8, 0.9)
         scene.add(mesh)
         box_map[k] = mesh
         height_animation_info_pre.push([0.4, mesh])
@@ -434,12 +451,18 @@ const controlling_tick = (time) => {
     } else if (winning_state !== null) {
         let dt = time - winning_state.base_time
         if (dt > winning_duration) {
-            winning_state = null
-            update_char_action("Idle")
-            for (let i = 0; i < height_animation_info_post.length; i++) {
-                scene.remove(height_animation_info_post[i][1])
+            if (next_level())
+            {
+                winning_state = null
+                update_char_action("Idle")
+                for (let i = 0; i < height_animation_info_post.length; i++) {
+                    scene.remove(height_animation_info_post[i][1])
+                }
             }
-            next_level()
+            else
+            {
+                set_camera_focus_target(char_model.position.x, char_model.position.y, char_model.position.z, 0.2, 0.7)
+            }
         } else {
             if (dt > 3.4) {
                 dt = dt - 3.4
