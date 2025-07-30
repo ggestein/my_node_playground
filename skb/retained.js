@@ -1,3 +1,5 @@
+// module importing
+
 import SKB from "./skb.js"
 import {skb_box_rules} from "./skb_box_rules.js"
 import {lv1} from "./levels/lv1.js"
@@ -6,20 +8,23 @@ import {lv3} from "./levels/lv3.js"
 import {lv4} from "./levels/lv4.js"
 import {lv5} from "./levels/lv5.js"
 import * as THREE from "./three.module.js"
-import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
-console.log(GLTFLoader)
+import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
+
+
+// SKB init
 
 let skb = new SKB()
+let [br, p] = skb.build(skb_box_rules, lv1)
+let [sr, sid] = p.parse_situation_id(lv1.start)
+let pg = p.start(sid)
+let pc = pg.get_context();
+console.log("PG", pg)
+console.log("PC", pc)
+let we = pc.get_enum("lv_walls")
+console.log("WE", we)
 
-console.log(skb)
-console.log(skb_box_rules)
-console.log(lv1)
-console.log(lv2)
-console.log(lv3)
-console.log(lv4)
-console.log(lv5)
 
-skb.build(skb_box_rules, lv1)
+//  scene initialization with THREE
 
 const width = 960
 const height = 540
@@ -31,7 +36,7 @@ const set_camera_focus = (x, y, z) => {
     camera_focus[0] = x
     camera_focus[1] = y
     camera_focus[2] = z
-    camera.position.set( 0 + x, 15 + y, 7 + z );
+    camera.position.set( 0 + x, 12 + y, 5 + z );
     camera.lookAt( x, y, z );
 }
 set_camera_focus(0, 0, 0);
@@ -48,24 +53,55 @@ const geometry_z = new THREE.BoxGeometry( 0.05, 0.05, 1000 );
 const material_z = new THREE.MeshNormalMaterial();
 const mesh_z = new THREE.Mesh( geometry_z, material_z );
 scene.add(mesh_z)
-/*
-for (let i = 0; i < 36; i++) {
-    const geometry = new THREE.BoxGeometry( 0.95, 0.95, 0.95 );
-    const material = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh( geometry, material );
-    const m = i % 6
-    const n = (i - m) / 6
-    mesh.position.set(m + 0.5, -0.15, n + 0.5)
-    mesh.scale.set(1, 0.3, 1)
-    scene.add( mesh );
+const wec = we.count()
+for (let i = 0; i < wec; i++) {
+    const x = we.get(i).g("x")
+    const y = we.get(i).g("y")
+    const geo = new THREE.BoxGeometry( 1, 1, 1)
+    const mat = new THREE.MeshNormalMaterial();
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(x + 0.5, 0.5, y + 0.5)
+    scene.add(mesh)
 }
-*/
+let box_map = new Object()
+const update_boxes_pos = () => {
+    const [csitr, csit] = pg.cur_sdata()
+    for (let k in box_map) {
+        const v = csit.boxes[k]
+        const x = v.x
+        const y = v.y
+        box_map[k].position.set(x + 0.5, 0.4, y + 0.5)
+    }
+}
+const [sitr, sit] = pg.cur_sdata()
+for (let k in sit.boxes) {
+    const v = sit.boxes[k]
+    const geo = new THREE.BoxGeometry( 1, 1, 1)
+    const mat = new THREE.MeshNormalMaterial();
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.scale.set(0.9, 0.8, 0.9)
+    scene.add(mesh)
+    box_map[k] = mesh
+}
+update_boxes_pos()
+
+
+// models
+let char_model = undefined
+const update_char_pos = () => {
+    const [csitr, csit] = pg.cur_sdata()
+    char_model.position.set(csit.player.x + 0.5, 0, csit.player.y + 0.5)
+}
 const loader = new GLTFLoader()
 loader.load("models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
+    char_model = gltf.scene
+    char_model.scale.set(0.36, 0.36, 0.36)
+    update_char_pos()
     scene.add(gltf.scene)
 }, undefined, (err) => {
     console.log(`FAILED TO LOAD GLTF: ${err}`)
 })
+
 
 // lights
 
@@ -77,13 +113,14 @@ const dirLight = new THREE.DirectionalLight( 0xffffff, 3 );
 dirLight.position.set( 0, 20, 10 );
 scene.add( dirLight );
 
+
 // ground
 
 const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0xcbcbcb, depthWrite: false } ) );
 mesh.rotation.x = - Math.PI / 2;
 scene.add( mesh );
 
-const grid = new THREE.GridHelper( 200, 40, 0x000000, 0x000000 );
+const grid = new THREE.GridHelper( 20, 20, 0x000000, 0x000000 );
 grid.material.opacity = 0.2;
 grid.material.transparent = true;
 scene.add( grid );
@@ -93,11 +130,72 @@ renderer.setSize( width, height );
 renderer.setAnimationLoop( animate );
 document.body.appendChild( renderer.domElement );
 
+
+// input handling
+let keyStates = {}
+let onKeydown = null
+const handleKeydown = (evt) => {
+    if (keyStates[evt.code]) {
+        return
+    }
+    keyStates[evt.code] = true
+    if (onKeydown != null) {
+        onKeydown(evt.code)
+    }
+}
+let onKeyup = null
+const handleKeyup = (evt) => {
+    keyStates[evt.code] = false
+    if (onKeyup != null) {
+        onKeyup(evt.code)
+    }
+}
+document.addEventListener("keydown", handleKeydown)
+document.addEventListener("keyup", handleKeyup)
+onKeydown = (evt) => {
+    console.log(evt, "DOWN")
+    if (evt === "ArrowUp") {
+        if (pg.move(0)) {
+            update_char_pos()
+            update_boxes_pos()
+        }
+    }
+    if (evt === "ArrowRight") {
+        if (pg.move(1)) {
+            update_char_pos()
+            update_boxes_pos()
+        }
+    }
+    if (evt === "ArrowDown") {
+        if (pg.move(2)) {
+            update_char_pos()
+            update_boxes_pos()
+        }
+    }
+    if (evt === "ArrowLeft") {
+        if (pg.move(3)) {
+            update_char_pos()
+            update_boxes_pos()
+        }
+    }
+}
+onKeyup = (evt) => {
+    console.log(evt, "UP")
+}
+
+
 // animation
 
 function animate( time ) {
 
-    set_camera_focus(Math.sin(time * 0.001), 0, 0)
+    const time_sec = time * 0.001
+
+    /*
+    if (char_model) {
+        char_model.position.set(0, 0, time_sec)
+    }
+    */
+
 	renderer.render( scene, camera );
 
 }
