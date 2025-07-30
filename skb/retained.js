@@ -19,16 +19,14 @@ const lerp = (a, b, t) => {
 
 // SKB init
 
-const lv = lv3
+const lv = lv4
 let skb = new SKB()
 let [br, p] = skb.build(skb_box_rules, lv)
 let [sr, sid] = p.parse_situation_id(lv.start)
 let pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
 let pc = pg.get_context();
-console.log("PG", pg)
-console.log("PC", pc)
 let we = pc.get_enum("lv_walls")
-console.log("WE", we)
+let ge = pc.get_enum("lv_goals")
 
 
 //  scene initialization with THREE
@@ -68,6 +66,17 @@ for (let i = 0; i < wec; i++) {
     const mat = new THREE.MeshNormalMaterial();
     const mesh = new THREE.Mesh(geo, mat)
     mesh.position.set(x + 0.5, 0.5, y + 0.5)
+    scene.add(mesh)
+}
+const gec = ge.count()
+for (let i = 0; i < gec; i++) {
+    const x = ge.get(i).g("x")
+    const y = ge.get(i).g("y")
+    const geo = new THREE.BoxGeometry( 1, 1, 1)
+    const mat = new THREE.MeshNormalMaterial();
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(x + 0.5, 0.05, y + 0.5)
+    mesh.scale.set(1, 0.1, 1)
     scene.add(mesh)
 }
 let box_map = new Object()
@@ -124,13 +133,11 @@ loader.load("models/gltf/RobotExpressive/RobotExpressive.glb", (gltf) => {
     char_model.scale.set(0.36, 0.36, 0.36)
     update_char_pos()
     scene.add(gltf.scene)
-    console.log(gltf.animations)
     char_mixer = new THREE.AnimationMixer(char_model)
     for (let i = 0; i < gltf.animations.length; i++) {
         const clip = gltf.animations[i]
         char_actions[clip.name] = char_mixer.clipAction(clip)
     }
-    console.log(char_actions)
     update_char_action("Idle")
 }, undefined, (err) => {
     console.log(`FAILED TO LOAD GLTF: ${err}`)
@@ -187,7 +194,6 @@ const handleKeyup = (evt) => {
 document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 onKeydown = (evt) => {
-    console.log(evt, "DOWN")
     if (evt === "KeyW") {
         up_pressing = true
     }
@@ -209,7 +215,6 @@ onKeydown = (evt) => {
     }
 }
 onKeyup = (evt) => {
-    console.log(evt, "UP")
     if (evt === "KeyW") {
         up_pressing = false
     }
@@ -227,7 +232,6 @@ onKeyup = (evt) => {
 
 // PG events
 const pg_move_callback = (m, ps, ns) => {
-    console.log(m, ps, ns)
     let face = -1
     if (ns !== undefined) {
         if (ns.player.x == ps.player.x) {
@@ -281,16 +285,24 @@ const pg_move_callback = (m, ps, ns) => {
 
 // controlling
 const move_duration = 0.24
+const winning_duration = 3.4
 const input_cd = 0.1
 let preparing_moving_state = null
 let moving_state = null
+let winning_state = null
 let up_pressing = false
 let right_pressing = false
 let down_pressing = false
 let left_pressing = false
 let last_input_time = 0
+let won = false
 const controlling_tick = (time) => {
-    if (moving_state !== null) {
+    if (winning_state !== null) {
+        if (time - winning_state.base_time > winning_duration) {
+            winning_state = null
+            update_char_action("Idle")
+        }
+    } else if (moving_state !== null) {
         const bt = moving_state.base_time
         const dt = time - bt
         let r = dt / move_duration
@@ -314,7 +326,21 @@ const controlling_tick = (time) => {
         }
         if (em) {
             moving_state = null
-            update_char_action("Idle")
+            let need_idle = true
+            if (!won) {
+                won = pg.check_win()
+                if (won) {
+                    winning_state = {
+                        base_time: time
+                    }
+                    update_char_rot(0)
+                    update_char_action("Dance")
+                    need_idle = false
+                }
+            }
+            if (need_idle) {
+                update_char_action("Idle")
+            }
         }
     } else {
         if (preparing_moving_state != null)
@@ -322,7 +348,7 @@ const controlling_tick = (time) => {
             moving_state = preparing_moving_state
             preparing_moving_state = null
             moving_state.base_time = time
-            update_char_action("Walking")
+            update_char_action("Running")
         } else {
             if (time - last_input_time > input_cd) {
                 if (up_pressing) {
