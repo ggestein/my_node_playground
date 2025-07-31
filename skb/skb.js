@@ -13,6 +13,17 @@ export default class SKB {
                 ["y", "0~20"],
 
             ])
+            pb.append_enum([
+
+                ["lv_walls", "x"  , "y"  ],
+                           [ "num", "num"],
+                //-------------------------
+            ])
+            pb.append_struct([
+
+                "lv_boxes",
+                //-----------------------
+            ])
 
             level.build(pb)
 
