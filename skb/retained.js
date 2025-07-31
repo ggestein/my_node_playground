@@ -309,10 +309,12 @@ onKeydown = (evt) => {
         left_pressing = true
     }
     if (evt === "KeyR") {
-        if (pg.rewind()) {
-            moving_state = null
-            update_char_pos()
-            update_boxes_pos()
+        if (!won && moving_state === null) {
+            if (pg.rewind()) {
+                moving_state = null
+                update_char_pos()
+                update_boxes_pos()
+            }
         }
     }
 }
@@ -454,6 +456,8 @@ const controlling_tick = (time) => {
                 winning_state = null
                 update_char_action("Idle")
                 for (let i = 0; i < height_animation_info_post.length; i++) {
+                    height_animation_info_post[i][1].material.dispose()
+                    height_animation_info_post[i][1].geometry.dispose()
                     scene.remove(height_animation_info_post[i][1])
                 }
             }
