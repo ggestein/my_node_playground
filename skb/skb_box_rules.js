@@ -1,6 +1,9 @@
 export let skb_box_rules = {
     build: (pb) => {
-        pb.append_prefilter((ctx, s) => {
+        pb.append_prefilter((ctx, s, pf0) => {
+            if (!pf0(ctx, s)) {
+                return false
+            }
             let points = []
             let walls = ctx.get_enum("lv_walls")
             let walls_count = walls.count()
@@ -26,25 +29,23 @@ export let skb_box_rules = {
             }
             return true
         })
-        const push = (ctx, s, dx, dy) => {
-            let r = structuredClone(s)
-            const tx = s.player.x + dx
-            const ty = s.player.y + dy
-            r.player.x = tx
-            r.player.y = ty
-            for (let bk in r.boxes) {
-                let bv = r.boxes[bk]
+        const push = (ctx, s, m0, dx, dy) => {
+            let s1 = m0(ctx, s)
+            const tx = s1.player.x
+            const ty = s1.player.y
+            for (let bk in s1.boxes) {
+                let bv = s1.boxes[bk]
                 if (bv.x == tx && bv.y == ty) {
                     bv.x = tx + dx
                     bv.y = ty + dy
                     break
                 }
             }
-            return r
+            return s1
         }
-        pb.append_move(0, (ctx, s) => push(ctx, s, 0, -1))
-        pb.append_move(1, (ctx, s) => push(ctx, s, 1, 0))
-        pb.append_move(2, (ctx, s) => push(ctx, s, 0, 1))
-        pb.append_move(3, (ctx, s) => push(ctx, s, -1, 0))
+        pb.append_move(0, (ctx, s, m0) => push(ctx, s, m0, 0, -1))
+        pb.append_move(1, (ctx, s, m0) => push(ctx, s, m0, 1, 0))
+        pb.append_move(2, (ctx, s, m0) => push(ctx, s, m0, 0, 1))
+        pb.append_move(3, (ctx, s, m0) => push(ctx, s, m0, -1, 0))
     }
 }

@@ -451,8 +451,7 @@ const controlling_tick = (time) => {
     } else if (winning_state !== null) {
         let dt = time - winning_state.base_time
         if (dt > winning_duration) {
-            if (next_level())
-            {
+            if (next_level()) {
                 winning_state = null
                 update_char_action("Idle")
                 for (let i = 0; i < height_animation_info_post.length; i++) {
@@ -460,10 +459,8 @@ const controlling_tick = (time) => {
                     height_animation_info_post[i][1].geometry.dispose()
                     scene.remove(height_animation_info_post[i][1])
                 }
-            }
-            else
-            {
-                set_camera_focus_target(char_model.position.x, char_model.position.y, char_model.position.z, 0.2, 0.7)
+            } else {
+                set_camera_focus_target(char_model.position.x, char_model.position.y + 0.5, char_model.position.z, 0.2, 0.7)
             }
         } else {
             if (dt > 3.4) {

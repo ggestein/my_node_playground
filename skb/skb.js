@@ -37,7 +37,7 @@ export default class SKB {
             ])
 
             pb.set_main("skb_state")
-            pb.append_prefilter((ctx, s) => {
+            pb.append_prefilter((ctx, s, pf0) => {
                 let points = []
                 let walls = ctx.get_enum("lv_walls")
                 let walls_count = walls.count()
@@ -83,10 +83,10 @@ export default class SKB {
                 return r
             }
 
-            pb.append_move(0, (ctx, s) => moveAndCollide(ctx, s, 0, -1))
-            pb.append_move(1, (ctx, s) => moveAndCollide(ctx, s, 1, 0))
-            pb.append_move(2, (ctx, s) => moveAndCollide(ctx, s, 0, 1))
-            pb.append_move(3, (ctx, s) => moveAndCollide(ctx, s, -1, 0))
+            pb.append_move(0, (ctx, s, m0) => moveAndCollide(ctx, s, 0, -1))
+            pb.append_move(1, (ctx, s, m0) => moveAndCollide(ctx, s, 1, 0))
+            pb.append_move(2, (ctx, s, m0) => moveAndCollide(ctx, s, 0, 1))
+            pb.append_move(3, (ctx, s, m0) => moveAndCollide(ctx, s, -1, 0))
 
             box_moves.build(pb)
 
