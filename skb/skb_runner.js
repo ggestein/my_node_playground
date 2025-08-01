@@ -1,5 +1,4 @@
-import SKB from "./skb.js"
-import { skb_box_rules } from "./skb_box_rules.js"
+import PB from "./lib/pb.js"
 import {lv1} from "./levels/lv1.js"
 import {lv2} from "./levels/lv2.js"
 import {lv3} from "./levels/lv3.js"
@@ -49,150 +48,146 @@ const handleKeyup = (evt) => {
 document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
-const skb = new SKB()
 const lvs = [
     lv15
 ]
 let lvidx = 0
-let [result, p] = skb.build(skb_box_rules, lvs[lvidx])
-if (result) {
-    l("SUCCESS TO BUILD")
-    let pg = null
-    let sd = new SD(ctx, canvas.width, canvas.height)
-    let win = false
-    const drawFunc = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = "#181818"
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        if (pg != null) {
-            sd.draw(pg.get_context(), pg.cur_sdata()[1])
-        } else {
-            ctx.font = "30px serif"
-            ctx.fillText("pg == null", 10, 10)
-        }
-        if (win) {
-            ctx.font = "100px serif"
-            ctx.textBaseline = "top"
-            ctx.fillStyle = "#ffffff"
-            ctx.fillText("WIN", 100, 100)
-        }
-    }
-    let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
-    let upKey = null
-    let rightKey = null
-    let downKey = null
-    let leftKey = null
-    const trigger_win = () => {
-        if (lvidx < lvs.length - 1) {
-            setTimeout(() => {
-                lvidx++
-                win = false
-                let [nxr, nxp] = skb.build(skb_box_rules, lvs[lvidx])
-                result = nxr
-                p = nxp
-                let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
-                pg = p.start(startId)
-                drawFunc()
-            }, 1500)
-        }
-    }
-    if (sr) {
-        pg = p.start(startId)
-        upKey = () => {
-            if (win) {
-                return
-            }
-            if (pg.move(0)) {
-                drawFunc()
-                win = pg.check_win()
-                if (win) {
-                    trigger_win()
-                }
-            }
-        }
-        rightKey = () => {
-            if (win) {
-                return
-            }
-            if (pg.move(1)) {
-                drawFunc()
-                win = pg.check_win()
-                if (win) {
-                    trigger_win()
-                }
-            }
-        }
-        downKey = () => {
-            if (win) {
-                return
-            }
-            if (pg.move(2)) {
-                drawFunc()
-                win = pg.check_win()
-                if (win) {
-                    trigger_win()
-                }
-            }
-        }
-        leftKey = () => {
-            if (win) {
-                return
-            }
-            if (pg.move(3)) {
-                drawFunc()
-                win = pg.check_win()
-                if (win) {
-                    trigger_win()
-                }
-            }
-        }
+let pb = new PB()
+lvs[lvidx].build(pb)
+let p = pb.build()
+l("SUCCESS TO BUILD")
+let pg = null
+let sd = new SD(ctx, canvas.width, canvas.height)
+let win = false
+const drawFunc = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = "#181818"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    if (pg != null) {
+        sd.draw(pg.get_context(), pg.cur_sdata()[1])
     } else {
-        l(`FAILED TO PARSE START SITUATION:\n${startId}`)
+        ctx.font = "30px serif"
+        ctx.fillText("pg == null", 10, 10)
     }
-    drawFunc()
-    onKeyup = (code) => {
-        l(`onKeyup: ${code}`)
-        let r = false
-        if (code == "ArrowLeft") {
-            if (leftKey != null) {
-                leftKey()
-            }
-            r = true
-        } else if (code == "ArrowRight") {
-            if (rightKey != null) {
-                rightKey()
-            }
-            r = true
-        } else if (code == "ArrowUp") {
-            if (upKey != null) {
-                upKey()
-            }
-            r = true
-        } else if (code == "ArrowDown") {
-            if (downKey != null) {
-                downKey()
-            }
-            r = true
-        } else if (code == "KeyC") {
-            log_buf = ""
-            log.value = log_buf
-        } else if (code == "KeyR") {
-            if (win) {
-                return
-            }
-            pg.rewind()
-            r = true
-        }
-        if (r) {
+    if (win) {
+        ctx.font = "100px serif"
+        ctx.textBaseline = "top"
+        ctx.fillStyle = "#ffffff"
+        ctx.fillText("WIN", 100, 100)
+    }
+}
+let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
+let upKey = null
+let rightKey = null
+let downKey = null
+let leftKey = null
+const trigger_win = () => {
+    if (lvidx < lvs.length - 1) {
+        setTimeout(() => {
+            lvidx++
+            win = false
+            let [nxr, nxp] = skb.build(skb_box_rules, lvs[lvidx])
+            result = nxr
+            p = nxp
+            let [sr, startId] = p.parse_situation_id(lvs[lvidx].start)
+            pg = p.start(startId)
             drawFunc()
+        }, 1500)
+    }
+}
+if (sr) {
+    pg = p.start(startId)
+    upKey = () => {
+        if (win) {
+            return
+        }
+        if (pg.move(0)) {
+            drawFunc()
+            win = pg.check_win()
+            if (win) {
+                trigger_win()
+            }
         }
     }
-    onKeydown = (code) => {
-        l(`onKeydown: ${code}`)
+    rightKey = () => {
+        if (win) {
+            return
+        }
+        if (pg.move(1)) {
+            drawFunc()
+            win = pg.check_win()
+            if (win) {
+                trigger_win()
+            }
+        }
+    }
+    downKey = () => {
+        if (win) {
+            return
+        }
+        if (pg.move(2)) {
+            drawFunc()
+            win = pg.check_win()
+            if (win) {
+                trigger_win()
+            }
+        }
+    }
+    leftKey = () => {
+        if (win) {
+            return
+        }
+        if (pg.move(3)) {
+            drawFunc()
+            win = pg.check_win()
+            if (win) {
+                trigger_win()
+            }
+        }
     }
 } else {
-    l("FAILED TO BUILD")
-    l(p)
+    l(`FAILED TO PARSE START SITUATION:\n${startId}`)
+}
+drawFunc()
+onKeyup = (code) => {
+    l(`onKeyup: ${code}`)
+    let r = false
+    if (code == "ArrowLeft") {
+        if (leftKey != null) {
+            leftKey()
+        }
+        r = true
+    } else if (code == "ArrowRight") {
+        if (rightKey != null) {
+            rightKey()
+        }
+        r = true
+    } else if (code == "ArrowUp") {
+        if (upKey != null) {
+            upKey()
+        }
+        r = true
+    } else if (code == "ArrowDown") {
+        if (downKey != null) {
+            downKey()
+        }
+        r = true
+    } else if (code == "KeyC") {
+        log_buf = ""
+        log.value = log_buf
+    } else if (code == "KeyR") {
+        if (win) {
+            return
+        }
+        pg.rewind()
+        r = true
+    }
+    if (r) {
+        drawFunc()
+    }
+}
+onKeydown = (code) => {
+    l(`onKeydown: ${code}`)
 }
 
 })()

@@ -1,5 +1,9 @@
+import {skb_box_rules} from "../skb_box_rules.js"
+
 export let lv11 = {
     build: (pb) => {
+        skb_box_rules.build(pb)
+
         pb.append_enum([
 
             ["lv_walls", "x"  , "y"  ],

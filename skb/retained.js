@@ -1,7 +1,6 @@
 // module importing
 
-import SKB from "./skb.js"
-import {skb_box_rules} from "./skb_box_rules.js"
+import PB from "./lib/pb.js"
 import { all_levels } from "./levels/all_levels.js"
 import * as THREE from "./three.module.js"
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js'
@@ -26,8 +25,9 @@ const next_level = () => {
     if (nlvi < lvs.length) {
         lvi = nlvi
         const lv = lvs[lvi]
-        let [br, np] = skb.build(skb_box_rules, lv)
-        p = np
+        let pb = new PB()
+        lv.build(pb)
+        p = pb.build()
         let [sr, sid] = p.parse_situation_id(lv.start)
         pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
         pc = pg.get_context();
@@ -74,7 +74,6 @@ const next_level = () => {
     }
     return false
 }
-let skb = new SKB()
 
 
 //  scene initialization with THREE

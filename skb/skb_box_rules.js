@@ -1,5 +1,8 @@
+import {SKB} from "./skb.js"
+
 export let skb_box_rules = {
     build: (pb) => {
+        SKB.build(pb)
         pb.append_prefilter((ctx, s, pf0) => {
             if (!pf0(ctx, s)) {
                 return false
