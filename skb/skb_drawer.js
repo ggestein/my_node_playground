@@ -29,6 +29,30 @@ export default class SD {
             this.ctx.fillStyle = "#cc00ff"
             this.ctx.fillRect(50 + gx * 50, 50 + gy * 50, 50, 50)
         }
+
+        // draw pedals
+        let pedals = ctx.get_enum("lv_pedals")
+        let pedals_count = pedals.count()
+        for (let i = 0; i < pedals_count; i++) {
+            let pc = pedals.get(i)
+            const px = pc.g("x")
+            const py = pc.g("y")
+            this.ctx.fillStyle = "#00ccff"
+            this.ctx.fillRect(50 + px * 50, 50 + py * 50, 50, 50)
+        }
+
+        // draw doors
+        let doors = ctx.get_enum("lv_doors")
+        let doors_count = doors.count()
+        for (let i = 0; i < doors_count; i++) {
+            let dc = doors.get(i)
+            const did = dc.g("id")
+            const dx = dc.g("x")
+            const dy = dc.g("y")
+            const on = s.doors[did].on
+            this.ctx.fillStyle = on === 1 ? "#770000" : "#ff0000"
+            this.ctx.fillRect(50 + dx * 50, 50 + dy * 50, 50, 50)
+        }
         // draw boxes
         let boxes = s.boxes
         for (let k in boxes) {

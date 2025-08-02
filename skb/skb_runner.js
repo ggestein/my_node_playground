@@ -14,6 +14,7 @@ import {lv12} from "./levels/lv12.js"
 import {lv13} from "./levels/lv13.js"
 import {lv14} from "./levels/lv14.js"
 import {lv15} from "./levels/lv15.js"
+import {lvd1} from "./levels/lvd1.js"
 import SD from "./skb_drawer.js"
 
 (() => {
@@ -49,7 +50,7 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
 const lvs = [
-    lv15
+    lvd1
 ]
 let lvidx = 0
 let pb = new PB()
