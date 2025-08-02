@@ -81,7 +81,7 @@ export let SKB = {
         pb.append_move(2, (ctx, s, m0) => moveAndCollide(ctx, s, 0, 1))
         pb.append_move(3, (ctx, s, m0) => moveAndCollide(ctx, s, -1, 0))
 
-        pb.set_win_check((ctx, s) => {
+        pb.append_win_check((ctx, s, w0) => {
             let goals = ctx.get_enum("lv_goals")
             let goals_count = goals.count()
             for (let i = 0; i < goals_count; i++) {
