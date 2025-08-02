@@ -20,6 +20,8 @@ let pg = null
 let we = null
 let ge = null
 let pc = null
+let de = null
+let pe = null
 const next_level = () => {
     const nlvi = lvi + 1
     if (nlvi < lvs.length) {
@@ -33,6 +35,8 @@ const next_level = () => {
         pc = pg.get_context();
         we = pc.get_enum("lv_walls")
         ge = pc.get_enum("lv_goals")
+        de = pc.get_enum("lv_doors")
+        pe = pc.get_enum("lv_pedals")
         setup_current_level()
         const [csitr, csit] = pg.cur_sdata()
         pre_preparing_state = {
@@ -148,6 +152,8 @@ scene.add(mesh_z)
 let height_animation_info_pre = []
 let height_animation_info_post = null
 let box_map = null
+let door_map = null
+let pedal_map = null
 const update_boxes_pos = (override_y) => {
     const [csitr, csit] = pg.cur_sdata()
     for (let k in box_map) {
@@ -166,6 +172,8 @@ crate_texture.colorSpace = THREE.SRGBColorSpace
 
 const setup_current_level = () => {
     box_map = new Object()
+    door_map = new Object()
+    pedal_map = new Object()
     const wec = we.count()
     for (let i = 0; i < wec; i++) {
         const x = we.get(i).g("x")
@@ -188,6 +196,36 @@ const setup_current_level = () => {
         mesh.scale.set(0.6, 0.1, 0.6)
         scene.add(mesh)
         height_animation_info_pre.push([0.05, mesh])
+    }
+    if (de) {
+        const dec = de.count()
+        for (let i = 0; i < dec; i++) {
+            const x = de.get(i).g("x")
+            const y = de.get(i).g("y")
+            const geo = new THREE.BoxGeometry( 1, 1, 1)
+            const mat = new THREE.MeshBasicMaterial( {color: 0x2222cc} );
+            const mesh = new THREE.Mesh(geo, mat)
+            mesh.position.set(x + 0.5, 100.0, y + 0.5)
+            mesh.scale.set(0.9, 1.2, 0.9)
+            scene.add(mesh)
+            door_map[de.get(i).g("id")] = [mesh, null]
+            height_animation_info_pre.push([0.6, mesh])
+        }
+    }
+    if (pe) {
+        const pec = pe.count()
+        for (let i = 0; i < pec; i++) {
+            const x = pe.get(i).g("x")
+            const y = pe.get(i).g("y")
+            const geo = new THREE.BoxGeometry( 1, 1, 1)
+            const mat = new THREE.MeshBasicMaterial( {color: 0x2222cc} );
+            const mesh = new THREE.Mesh(geo, mat)
+            mesh.position.set(x + 0.5, 100.0, y + 0.5)
+            mesh.scale.set(1, 0.1, 1)
+            scene.add(mesh)
+            pedal_map[pe.get(i).g("id")] = mesh
+            height_animation_info_pre.push([0.05, mesh])
+        }
     }
     const [sitr, sit] = pg.cur_sdata()
     for (let k in sit.boxes) {
@@ -348,6 +386,31 @@ const pg_move_callback = (m, ps, ns) => {
                 face = 3
             } else if (ns.player.x > ps.player.x) {
                 face = 1
+            }
+        }
+        const s1 = (m !== undefined) ? ns : ps
+        const s0 = (m !== undefined) ? ps : ns
+        if (s1.doors) {
+            for (let k in s1.doors) {
+                const on0 = s0.doors[k].on
+                const on1 = s1.doors[k].on
+                if (on0 !== on1 || m === undefined) {
+                    if (on1 === 1) {
+                        pedal_map[k].material.color.set(0x6666ff)
+                        door_map[k][0].material.color.set(0x6666ff)
+                        door_map[k][1] = -0.55
+                        if (m === undefined) {
+                            door_map[k][0].position.y = -0.55
+                        }
+                    } else {
+                        pedal_map[k].material.color.set(0x2222cc)
+                        door_map[k][0].material.color.set(0x2222cc)
+                        door_map[k][1] = 0.6
+                        if (m === undefined) {
+                            door_map[k][0].position.y = 0.6
+                        }
+                    }
+                }
             }
         }
     } else if (m !== undefined) {
@@ -552,6 +615,21 @@ const controlling_tick = (time) => {
 
 
 // animation
+const custom_animation_tick = (dt) => {
+    if (door_map) {
+        for (let k in door_map) {
+            const [mesh, target_y] = door_map[k]
+            if (target_y !== null) {
+                const dist = dt * 0.02
+                let y = mesh.position.y
+                const y0 = y - dist
+                const y1 = y + dist
+                y = (target_y < y0) ? y0 : ((target_y > y1) ? y1 : target_y)
+                mesh.position.y = y
+            }
+        }
+    }
+}
 
 let prev_time = null
 function animate( time ) {
@@ -562,6 +640,7 @@ function animate( time ) {
         dt = time_sec - prev_time
     }
     controlling_tick(time_sec)
+    custom_animation_tick(time_sec)
     if (char_mixer) {
         char_mixer.update(dt)
     }
