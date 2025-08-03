@@ -14,8 +14,12 @@ import {lv13} from "./lv13.js"
 import {lv14} from "./lv14.js"
 import {lv15} from "./lv15.js"
 import {lvd1} from "./lvd1.js"
+import {lvb1} from "./lvb1.js"
+import {lvb2} from "./lvb2.js"
 
 export let all_levels = [
+    lvb1,
+    lvb2,
     lvd1,
     lv1,
     lv2,
