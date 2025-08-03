@@ -168,6 +168,11 @@ const update_boxes_pos = (override_y) => {
     }
 }
 const crate_texture = new THREE.TextureLoader().load("textures/crate.gif")
+const rune_texture_wall = new THREE.TextureLoader().load("textures/rune_wall.gif")
+const rune_texture_box = new THREE.TextureLoader().load("textures/rune_box.gif")
+const rune_texture_is = new THREE.TextureLoader().load("textures/rune_is.gif")
+const rune_texture_stop = new THREE.TextureLoader().load("textures/rune_stop.gif")
+const rune_texture_push = new THREE.TextureLoader().load("textures/rune_push.gif")
 crate_texture.colorSpace = THREE.SRGBColorSpace
 
 const setup_current_level = () => {
@@ -232,7 +237,29 @@ const setup_current_level = () => {
         const v = sit.boxes[k]
         const geo = new THREE.BoxGeometry( 1, 1, 1)
         // const mat = new THREE.MeshNormalMaterial();
-        const mat = new THREE.MeshBasicMaterial( { map: crate_texture} )
+        let tex = crate_texture
+        const re = pg.get_context().get_enum("lv_runes")
+        if (re)
+        {
+            for (let i = 0; i < re.count(); i++) {
+                const c = re.get(i)
+                const box_id = c.g("box_id")
+                if (box_id === k) {
+                    const rune_id = c.g("rune_id")
+                    tex = rune_texture_is
+                    if (rune_id == 101) {
+                        tex = rune_texture_wall
+                    } else if (rune_id == 102) {
+                        tex = rune_texture_box
+                    } else if (rune_id == 201) {
+                        tex = rune_texture_stop
+                    } else if (rune_id == 202) {
+                        tex = rune_texture_push
+                    }
+                }
+            }
+        }
+        const mat = new THREE.MeshBasicMaterial( { map: tex} )
         const mesh = new THREE.Mesh(geo, mat)
         scene.add(mesh)
         box_map[k] = mesh

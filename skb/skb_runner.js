@@ -52,7 +52,7 @@ document.addEventListener("keydown", handleKeydown)
 document.addEventListener("keyup", handleKeyup)
 
 const lvs = [
-    lvb1
+    lvb2
 ]
 let lvidx = 0
 let pb = new PB()

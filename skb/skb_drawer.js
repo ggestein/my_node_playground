@@ -55,14 +55,38 @@ export default class SD {
         }
         // draw boxes
         let boxes = s.boxes
+        let runes = ctx.get_enum("lv_runes")
         for (let k in boxes) {
             let b = boxes[k]
             const bx = b.x
             const by = b.y
+            let rune_id = null
+            for (let i = 0; i < runes.count(); i++) {
+                const c = runes.get(i)
+                if (c.g("box_id") === k) {
+                    rune_id = c.g("rune_id")
+                }
+            }
             this.ctx.fillStyle = "#772222"
             this.ctx.fillRect(50 + bx * 50 + 2, 50 + by * 50 + 2, 50 - 4, 50 - 4)
             this.ctx.fillStyle = "#ffffff"
             this.ctx.strokeRect(50 + bx * 50 + 2, 50 + by * 50 + 2, 50 - 4, 50 - 4)
+            if (rune_id !== null) {
+                let rt = "IS"
+                if (rune_id == 101) {
+                    rt = "WALL"
+                } else if (rune_id == 102) {
+                    rt = "BOX"
+                } else if (rune_id == 201) {
+                    rt = "STOP"
+                } else if (rune_id == 202) {
+                    rt = "PUSH"
+                }
+                this.ctx.font = "14px serif"
+                this.ctx.textAlign = "center"
+                this.ctx.textBaseline = "center"
+                this.ctx.fillText(rt, 50 + bx * 50 + 25, 50 + by * 50 + 25)
+            }
         }
 
         // draw player
