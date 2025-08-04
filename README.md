@@ -7,3 +7,4 @@
     1. exception based prefilter
     2. move event emit
     3. BigInt for situation id
+    4. explicit new/append for enum and struct

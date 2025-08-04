@@ -18,9 +18,6 @@ import {lvb1} from "./lvb1.js"
 import {lvb2} from "./lvb2.js"
 
 export let all_levels = [
-    lvb1,
-    lvb2,
-    lvd1,
     lv1,
     lv2,
     lv3,
@@ -36,4 +33,7 @@ export let all_levels = [
     lv13,
     lv14,
     lv15,
+    lvd1,
+    lvb1,
+    lvb2,
 ]
