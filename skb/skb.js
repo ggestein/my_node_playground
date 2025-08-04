@@ -31,6 +31,7 @@ export let SKB = {
 
         pb.set_main("skb_state")
         pb.append_prefilter((ctx, s, pf0) => {
+            let ex = []
             let points = []
             let walls = ctx.get_enum("lv_walls")
             let walls_count = walls.count()
@@ -38,11 +39,6 @@ export let SKB = {
                 const wc = walls.get(i)
                 const wx = wc.g("x")
                 const wy = wc.g("y")
-                for (let j = 0; j < points.length; j++) {
-                    if (points[j][0] == wx && points[j][1] == wy) {
-                        return false
-                    }
-                }
                 points.push([wx, wy])
             }
             let goals = ctx.get_enum("lv_goals")
@@ -53,7 +49,7 @@ export let SKB = {
                 const gy = gc.g("y")
                 for (let j = 0; j < points.length; j++) {
                     if (points[j][0] == gx && points[j][1] == gy) {
-                        return false
+                        ex.push({})
                     }
                 }
             }
@@ -61,10 +57,10 @@ export let SKB = {
             let py = s.player.y
             for (let j = 0; j < points.length; j++) {
                 if (points[j][0] == px && points[j][1] == py) {
-                    return false
+                    ex.push({wall: true})
                 }
             }
-            return true
+            return ex
         })
 
         const moveAndCollide = (ctx, s, dx, dy) => {
@@ -82,6 +78,7 @@ export let SKB = {
         pb.append_move(3, (ctx, s, m0) => moveAndCollide(ctx, s, -1, 0))
 
         pb.append_win_check((ctx, s, w0) => {
+            let ex = []
             let goals = ctx.get_enum("lv_goals")
             let goals_count = goals.count()
             for (let i = 0; i < goals_count; i++) {
@@ -97,10 +94,10 @@ export let SKB = {
                     }
                 }
                 if (!ok) {
-                    return false
+                    ex.push({})
                 }
             }
-            return true
+            return ex
         })
     }
 }

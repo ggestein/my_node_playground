@@ -122,50 +122,16 @@ export let skb_baba_rules = {
         }
 
         pb.append_prefilter((ctx, s, pf0) => {
+            let ex = pf0(ctx, s)
             const rule_mod = calculate_rules(ctx, s)
             console.log(rule_mod)
             let stop_points = []
             const wall_mod = rule_mod.get(101)
             const wall_stop = default_wall_stop(ctx) || (wall_mod && wall_mod.includes(201))
-            if (wall_stop) {
-                const we = ctx.get_enum("lv_walls")
-                const wec = we.count()
-                for (let i = 0; i < wec; i++) {
-                    const c = we.get(i)
-                    stop_points.push([c.g("x"), c.g("y")])
-                }
+            if (!wall_stop) {
+                ex = ex.filter(x => x.wall !== true)
             }
-            let doors = ctx.get_enum("lv_doors")
-            let doors_count = doors.count()
-            for (let i = 0; i < doors_count; i++) {
-                const dc = doors.get(i)
-                const did = dc.g("id")
-                const on = s.doors[did].on
-                if (on === 1) {
-                    continue
-                }
-                const dx = dc.g("x")
-                const dy = dc.g("y")
-                stop_points.push([dx, dy])
-            }
-            const be = s.boxes
-            for (let k in be) {
-                const v = be[k]
-                for (let j = 0; j < stop_points.length; j++) {
-                    if (stop_points[j][0] == v.x && stop_points[j][1] == v.y) {
-                        return false
-                    }
-                }
-                stop_points.push([v.x, v.y])
-            }
-            let px = s.player.x
-            let py = s.player.y
-            for (let i = 0; i < stop_points.length; i++) {
-                if (stop_points[i][0] == px && stop_points[i][1] == py) {
-                    return false
-                }
-            }
-            return true
+            return ex
         })
 
         const box_stop = (ctx, s, m0, dx, dy) => {

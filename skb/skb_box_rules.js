@@ -4,9 +4,7 @@ export let skb_box_rules = {
     build: (pb) => {
         SKB.build(pb)
         pb.append_prefilter((ctx, s, pf0) => {
-            if (!pf0(ctx, s)) {
-                return false
-            }
+            let ex = pf0(ctx, s)
             let points = []
             let walls = ctx.get_enum("lv_walls")
             let walls_count = walls.count()
@@ -26,11 +24,11 @@ export let skb_box_rules = {
                 const by = bc.y
                 for (let j = 0; j < points.length; j++) {
                     if (points[j][0] == bx && points[j][1] == by) {
-                        return false
+                        ex.push({wall: true})
                     }
                 }
             }
-            return true
+            return ex
         })
         const push = (ctx, s, m0, dx, dy) => {
             let s1 = m0(ctx, s)

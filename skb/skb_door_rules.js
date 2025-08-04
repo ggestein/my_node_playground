@@ -32,9 +32,7 @@ export let skb_door_rules = {
             ["doors", "lv_door_insts"],
         ])
         pb.append_prefilter((ctx, s, pf0) => {
-            if (!pf0(ctx, s)) {
-                return false
-            }
+            let ex = pf0(ctx, s)
             let points = []
             let doors = ctx.get_enum("lv_doors")
             let doors_count = doors.count()
@@ -56,7 +54,7 @@ export let skb_door_rules = {
                 const by = bc.y
                 for (let j = 0; j < points.length; j++) {
                     if (points[j][0] == bx && points[j][1] == by) {
-                        return false
+                        ex.push({})
                     }
                 }
             }
@@ -64,10 +62,10 @@ export let skb_door_rules = {
             let py = s.player.y
             for (let i = 0; i < points.length; i++) {
                 if (points[i][0] == px && points[i][1] == py) {
-                    return false
+                    ex.push({})
                 }
             }
-            return true
+            return ex
         })
         const pedal_trigger_door = (ctx, s, m0, dx, dy) => {
             let s1 = m0(ctx, s)
