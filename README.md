@@ -4,7 +4,7 @@
 3. retained mode view for puzzles (OK)
 4. interact with continuous system
 5. branching (semi-OK)
-    1. exception based prefilter
+    1. exception based prefilter(OK)
     2. move event emit
-    3. BigInt for situation id
+    3. BigInt for situation id(OK)
     4. explicit new/append for enum and struct
