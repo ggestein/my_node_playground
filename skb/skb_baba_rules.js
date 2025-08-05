@@ -124,8 +124,6 @@ export let skb_baba_rules = {
         pb.append_prefilter((ctx, s, pf0) => {
             let ex = pf0(ctx, s)
             const rule_mod = calculate_rules(ctx, s)
-            console.log(rule_mod)
-            let stop_points = []
             const wall_mod = rule_mod.get(101)
             const wall_stop = default_wall_stop(ctx) || (wall_mod && wall_mod.includes(201))
             if (!wall_stop) {

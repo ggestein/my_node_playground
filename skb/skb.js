@@ -31,36 +31,13 @@ export let SKB = {
 
         pb.set_main("skb_state")
         pb.append_prefilter((ctx, s, pf0) => {
-            let ex = []
-            let points = []
-            let walls = ctx.get_enum("lv_walls")
-            let walls_count = walls.count()
-            for (let i = 0; i < walls_count; i++) {
-                const wc = walls.get(i)
-                const wx = wc.g("x")
-                const wy = wc.g("y")
-                points.push([wx, wy])
-            }
-            let goals = ctx.get_enum("lv_goals")
-            let goals_count = goals.count()
-            for (let i = 0; i < goals_count; i++) {
-                const gc = goals.get(i)
-                const gx = gc.g("x")
-                const gy = gc.g("y")
-                for (let j = 0; j < points.length; j++) {
-                    if (points[j][0] == gx && points[j][1] == gy) {
-                        ex.push({})
-                    }
-                }
-            }
-            let px = s.player.x
-            let py = s.player.y
-            for (let j = 0; j < points.length; j++) {
-                if (points[j][0] == px && points[j][1] == py) {
-                    ex.push({wall: true})
-                }
-            }
-            return ex
+            let goals = ctx.get_enum("lv_goals").collect()
+            goals.push(s.player)
+            return ctx.get_enum("lv_walls").collect()
+                .filter(x => goals
+                    .filter(y => x.x == y.x && x.y == y.y).length > 0
+                )
+                .map(x => {return {wall: true}})
         })
 
         const moveAndCollide = (ctx, s, dx, dy) => {
