@@ -30,8 +30,10 @@ export let skb_box_rules = {
             }
             return ex
         })
-        const push = (ctx, s, m0, dx, dy) => {
-            let s1 = m0(ctx, s)
+        const push = (ctx, se, m0, dx, dy) => {
+            let [s, e] = se
+            let se1 = m0(ctx, se)
+            let [s1, e1] = se1
             const tx = s1.player.x
             const ty = s1.player.y
             for (let bk in s1.boxes) {
@@ -42,11 +44,11 @@ export let skb_box_rules = {
                     break
                 }
             }
-            return s1
+            return [s1, e1]
         }
-        pb.append_move(0, (ctx, s, m0) => push(ctx, s, m0, 0, -1))
-        pb.append_move(1, (ctx, s, m0) => push(ctx, s, m0, 1, 0))
-        pb.append_move(2, (ctx, s, m0) => push(ctx, s, m0, 0, 1))
-        pb.append_move(3, (ctx, s, m0) => push(ctx, s, m0, -1, 0))
+        pb.append_move(0, (ctx, se, m0) => push(ctx, se, m0, 0, -1))
+        pb.append_move(1, (ctx, se, m0) => push(ctx, se, m0, 1, 0))
+        pb.append_move(2, (ctx, se, m0) => push(ctx, se, m0, 0, 1))
+        pb.append_move(3, (ctx, se, m0) => push(ctx, se, m0, -1, 0))
     }
 }

@@ -31,7 +31,7 @@ const next_level = () => {
         lv.build(pb)
         p = pb.build()
         let [sr, sid] = p.parse_situation_id(lv.start)
-        pg = p.start(sid, (m, ps, ns) => pg_move_callback(m, ps, ns))
+        pg = p.start(sid, (m, ps, ns, e) => pg_move_callback(m, ps, ns, e))
         pc = pg.get_context();
         we = pc.get_enum("lv_walls")
         ge = pc.get_enum("lv_goals")
@@ -399,7 +399,8 @@ onKeyup = (evt) => {
 
 
 // PG events
-const pg_move_callback = (m, ps, ns) => {
+const pg_move_callback = (m, ps, ns, e) => {
+    console.log("E", e)
     let face = -1
     if (ns !== undefined) {
         if (ns.player.x == ps.player.x) {

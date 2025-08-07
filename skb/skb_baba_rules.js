@@ -132,8 +132,10 @@ export let skb_baba_rules = {
             return ex
         })
 
-        const box_stop = (ctx, s, m0, dx, dy) => {
-            let s1 = m0(ctx, s)
+        const box_stop = (ctx, se, m0, dx, dy) => {
+            let [s, e] = se
+            let se1 = m0(ctx, se)
+            let [s1, e1] = se1
             const rule_mod = calculate_rules(ctx, s)
             const box_mod = rule_mod.get(102)
             const box_push = default_box_push(ctx) || (box_mod && box_mod.includes(202))
@@ -161,12 +163,12 @@ export let skb_baba_rules = {
                     }
                 }
             }
-            return s1
+            return [s1, e1]
         }
 
-        pb.append_move(0, (ctx, s, m0) => box_stop(ctx, s, m0, 0, -1))
-        pb.append_move(1, (ctx, s, m0) => box_stop(ctx, s, m0, 1, 0))
-        pb.append_move(2, (ctx, s, m0) => box_stop(ctx, s, m0, 0, 1))
-        pb.append_move(3, (ctx, s, m0) => box_stop(ctx, s, m0, -1, 0))
+        pb.append_move(0, (ctx, se, m0) => box_stop(ctx, se, m0, 0, -1))
+        pb.append_move(1, (ctx, se, m0) => box_stop(ctx, se, m0, 1, 0))
+        pb.append_move(2, (ctx, se, m0) => box_stop(ctx, se, m0, 0, 1))
+        pb.append_move(3, (ctx, se, m0) => box_stop(ctx, se, m0, -1, 0))
     }
 }

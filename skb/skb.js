@@ -40,19 +40,20 @@ export let SKB = {
                 .map(x => {return {wall: true}})
         })
 
-        const moveAndCollide = (ctx, s, dx, dy) => {
+        const moveAndCollide = (ctx, se, dx, dy) => {
+            let [s, e] = se
             let r = structuredClone(s)
             const tx = s.player.x + dx
             const ty = s.player.y + dy
             r.player.x = tx
             r.player.y = ty
-            return r
+            return [r, e]
         }
 
-        pb.append_move(0, (ctx, s, m0) => moveAndCollide(ctx, s, 0, -1))
-        pb.append_move(1, (ctx, s, m0) => moveAndCollide(ctx, s, 1, 0))
-        pb.append_move(2, (ctx, s, m0) => moveAndCollide(ctx, s, 0, 1))
-        pb.append_move(3, (ctx, s, m0) => moveAndCollide(ctx, s, -1, 0))
+        pb.append_move(0, (ctx, se, m0) => moveAndCollide(ctx, se, 0, -1))
+        pb.append_move(1, (ctx, se, m0) => moveAndCollide(ctx, se, 1, 0))
+        pb.append_move(2, (ctx, se, m0) => moveAndCollide(ctx, se, 0, 1))
+        pb.append_move(3, (ctx, se, m0) => moveAndCollide(ctx, se, -1, 0))
 
         pb.append_win_check((ctx, s, w0) => {
             let ex = []
