@@ -27,6 +27,7 @@ export let skb_box_rules = {
                         ex.push({wall: true})
                     }
                 }
+                points.push([bx, by])
             }
             return ex
         })
