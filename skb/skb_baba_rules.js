@@ -11,13 +11,6 @@ export let skb_baba_rules = {
             // [0         , "box_01", 0]
         ])
 
-        pb.append_enum([
-            ["baba_default", "wall_default_stop", "box_default_push"],
-                           [ "num"              , "num"             ],
-            //-----------------------------
-            // [0         , "box_01", 0]
-        ])
-
         const calculate_rules =(ctx, s) => {
             let result = new Map()
             const runes = ctx.get_enum("lv_runes")
@@ -98,34 +91,11 @@ export let skb_baba_rules = {
             return result
         }
 
-        const default_wall_stop = (ctx) => {
-            const e = ctx.get_enum("baba_default")
-            if (!e) {
-                return false
-            }
-            const c = e.get(0)
-            if (!c) {
-                return false
-            }
-            return c.g("wall_default_stop") === 1
-        }
-        const default_box_push = (ctx) => {
-            const e = ctx.get_enum("baba_default")
-            if (!e) {
-                return false
-            }
-            const c = e.get(0)
-            if (!c) {
-                return false
-            }
-            return c.g("box_default_push") === 1
-        }
-
         pb.append_prefilter((ctx, s, pf0) => {
             let ex = pf0(ctx, s)
             const rule_mod = calculate_rules(ctx, s)
             const wall_mod = rule_mod.get(101)
-            const wall_stop = default_wall_stop(ctx) || (wall_mod && wall_mod.includes(201))
+            const wall_stop = wall_mod && wall_mod.includes(201)
             if (!wall_stop) {
                 ex = ex.filter(x => x.wall !== true)
             }
@@ -138,7 +108,7 @@ export let skb_baba_rules = {
             let [s1, e1] = se1
             const rule_mod = calculate_rules(ctx, s)
             const box_mod = rule_mod.get(102)
-            const box_push = default_box_push(ctx) || (box_mod && box_mod.includes(202))
+            const box_push = box_mod && box_mod.includes(202)
             if (!box_push) {
                 let pushed_box = null
                 for (let k in s.boxes) {

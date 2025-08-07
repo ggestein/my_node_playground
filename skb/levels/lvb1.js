@@ -55,12 +55,6 @@ export let lvb1 = {
             [3         , 4    , 3    ],
 
         ])
-        pb.append_enum([
-            ["baba_default", "wall_default_stop", "box_default_push"],
-                           [ "num"              , "num"             ],
-            //-----------------------------
-            [0             , 1                  , 0]
-        ])
 
         pb.append_struct([
 
@@ -68,10 +62,11 @@ export let lvb1 = {
             //-----------------------
             ["box_0", "point"],
             ["box_1", "point"],
-            // ["rune_wall", "point"],
-            ["rune_is", "point"],
-            // ["rune_stop", "point"],
+            ["rune_wall", "point"],
+            ["rune_is_0", "point"],
+            ["rune_stop", "point"],
             ["rune_box", "point"],
+            ["rune_is_1", "point"],
             ["rune_push", "point"],
         ])
 
@@ -79,10 +74,11 @@ export let lvb1 = {
             ["lv_runes", "box_id"   , "rune_id"],
                        [ "str"      , "num"    ],
             //-----------------------------------
-            // [0         , "rune_wall", 101      ],
-            [1         , "rune_is",   0      ],
-            // [2         , "rune_stop", 201      ],
+            [0         , "rune_wall", 101      ],
+            [1         , "rune_is_0",   0      ],
+            [2         , "rune_stop", 201      ],
             [3         , "rune_box" , 102      ],
+            [4         , "rune_is_1",   0      ],
             [5         , "rune_push", 202      ],
         ])
 
@@ -124,28 +120,28 @@ export let lvb1 = {
                 x: 5,
                 y: 2,
             },
-            /*
             rune_wall: {
+                x: 10,
+                y: 0,
+            },
+            rune_is_0: {
+                x: 10,
+                y: 1,
+            },
+            rune_stop: {
+                x: 10,
+                y: 2,
+            },
+            rune_box: {
                 x: 5,
                 y: 5,
             },
-            */
-            rune_is: {
+            rune_is_1: {
                 x: 5,
                 y: 7,
             },
-            /*
-            rune_stop: {
-                x: 7,
-                y: 7,
-            },
-            */
-            rune_box: {
-                x: 7,
-                y: 6,
-            },
             rune_push: {
-                x: 2,
+                x: 7,
                 y: 7,
             },
         },
