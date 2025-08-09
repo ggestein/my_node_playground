@@ -153,6 +153,10 @@ export let lvb1 = {
             door_01: {
                 on: 0
             }
+        },
+        baba: {
+            wall_stop: 1,
+            box_push: 0
         }
     }
 }
