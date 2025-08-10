@@ -164,7 +164,11 @@ const update_boxes_pos = (override_y) => {
         if (override_y) {
             height = override_y
         }
-        box_map[k].position.set(x + 0.5, height, y + 0.5)
+        box_map[k][0].position.set(x + 0.5, height, y + 0.5)
+        const ve = box_map[k][1]
+        if (ve) {
+            box_map[k][1].position.set(x + 0.5, 0.7, y + 0.5)
+        }
     }
 }
 const crate_texture = new THREE.TextureLoader().load("textures/crate.gif")
@@ -233,12 +237,18 @@ const setup_current_level = () => {
         }
     }
     const [sitr, sit] = pg.cur_sdata()
+    let ana = pg.get_analyzer("calc_rule")
+    let baba_rules = undefined
+    if (ana) {
+        baba_rules = ana(pg.get_context(), sit)
+    }
     for (let k in sit.boxes) {
         const v = sit.boxes[k]
         const geo = new THREE.BoxGeometry( 1, 1, 1)
         // const mat = new THREE.MeshNormalMaterial();
         let tex = crate_texture
         const re = pg.get_context().get_enum("lv_runes")
+        let is_rune = false
         if (re)
         {
             for (let i = 0; i < re.count(); i++) {
@@ -249,21 +259,37 @@ const setup_current_level = () => {
                     tex = rune_texture_is
                     if (rune_id == 101) {
                         tex = rune_texture_wall
+                        is_rune = true
                     } else if (rune_id == 102) {
                         tex = rune_texture_box
+                        is_rune = true
                     } else if (rune_id == 201) {
                         tex = rune_texture_stop
+                        is_rune = true
                     } else if (rune_id == 202) {
                         tex = rune_texture_push
+                        is_rune = true
                     }
                 }
             }
         }
         const mat = new THREE.MeshBasicMaterial( { map: tex} )
         const mesh = new THREE.Mesh(geo, mat)
+        const mate = new THREE.MeshBasicMaterial( { color: 0xaa0000} )
+        const geoe = new THREE.BoxGeometry(1.2, 0.2, 1.2)
+        const meshe = new THREE.Mesh(geoe, mate)
         scene.add(mesh)
-        box_map[k] = mesh
+        scene.add(meshe)
+        let vis = false
+        if (baba_rules && is_rune) {
+            vis = baba_rules.get("runes")[k] ? true : false
+            const tint = vis ? 1.0 : 0.4
+            mat.color.set(tint, tint, tint)
+        }
+        meshe.visible = vis
+        box_map[k] = [mesh, meshe]
         height_animation_info_pre.push([0.4, mesh])
+        height_animation_info_pre.push([0.7, meshe])
     }
     update_boxes_pos(100)
 }
@@ -408,6 +434,29 @@ const pg_move_callback = (m, ps, ns, e) => {
     if (calc_rule && ns) {
         const rule = calc_rule(ctx, ns)
         console.log("RULE", rule)
+        if (rule) {
+            const baba_boxes = rule.get("runes")
+            const re = ctx.get_enum("lv_runes")
+            for (let k in box_map) {
+                let is_rune = false
+                for (let i = 0; i < re.count(); i++) {
+                    if (re.get(i).g("box_id") === k) {
+                        is_rune = true
+                        break
+                    }
+                }
+                if (!is_rune) {
+                    continue
+                }
+                const [b, e] = box_map[k]
+                if (e) {
+                    const vis = baba_boxes[k] ? true : false
+                    e.visible = vis
+                    const tint = vis ? 1.0 : 0.4
+                    b.material.color.set(tint, tint, tint)
+                }
+            }
+        }
     }
     let face = -1
     if (ns !== undefined) {
@@ -592,9 +641,14 @@ const controlling_tick = (time) => {
         )
         for (let k in moving_state.boxes) {
             const v = moving_state.boxes[k]
-            box_map[k].position.set(
+            box_map[k][0].position.set(
                 lerp(v[0][0], v[1][0], r),
                 lerp(v[0][1], v[1][1], r),
+                lerp(v[0][2], v[1][2], r)
+            )
+            box_map[k][1].position.set(
+                lerp(v[0][0], v[1][0], r),
+                0.7,
                 lerp(v[0][2], v[1][2], r)
             )
         }

@@ -13,6 +13,8 @@ export let skb_baba_rules = {
 
         pb.append_analyzer("calc_rule", (ctx, s) => {
             let result = new Map()
+            let rune_effect_list = {}
+            result.set("runes", rune_effect_list)
             const runes = ctx.get_enum("lv_runes")
             let rune_map = new Object()
             const runes_count = runes.count()
@@ -30,6 +32,8 @@ export let skb_baba_rules = {
                 // horizon matching
                 let rune0 = null
                 let rune1 = null
+                let bk0 = null
+                let bk1 = null
                 for (let k1 in s.boxes) {
                     const v1 = s.boxes[k1]
                     if (v1 === v) { // exclude itself
@@ -41,11 +45,13 @@ export let skb_baba_rules = {
                         const r = rune_map[k1]
                         if (r && r >= 100 && r < 200) {
                             rune0 = r
+                            bk0 = k1
                         }
                     } else if (bx + 1 === bx1 && by === by1) {
                         const r = rune_map[k1]
                         if (r && r >= 200) {
                             rune1 = r
+                            bk1 = k1
                         }
                     }
                 }
@@ -56,10 +62,15 @@ export let skb_baba_rules = {
                         result.set(rune0, m)
                     }
                     m.push(rune1)
+                    rune_effect_list[bk0] = true
+                    rune_effect_list[k] = true
+                    rune_effect_list[bk1] = true
                 }
                 // vertical matching
                 rune0 = null
                 rune1 = null
+                bk0 = null
+                bk1 = null
                 for (let k1 in s.boxes) {
                     const v1 = s.boxes[k1]
                     if (v1 === v) { // exclude itself
@@ -71,11 +82,13 @@ export let skb_baba_rules = {
                         const r = rune_map[k1]
                         if (r && r >= 100 && r < 200) {
                             rune0 = r
+                            bk0 = k1
                         }
                     } else if (bx === bx1 && by + 1 === by1) {
                         const r = rune_map[k1]
                         if (r && r >= 200) {
                             rune1 = r
+                            bk1 = k1
                         }
                     }
                 }
@@ -86,6 +99,9 @@ export let skb_baba_rules = {
                         result.set(rune0, m)
                     }
                     m.push(rune1)
+                    rune_effect_list[bk0] = true
+                    rune_effect_list[k] = true
+                    rune_effect_list[bk1] = true
                 }
             }
             return result
