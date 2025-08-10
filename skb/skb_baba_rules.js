@@ -11,7 +11,7 @@ export let skb_baba_rules = {
             // [0         , "box_01", 0]
         ])
 
-        const calculate_rules =(ctx, s) => {
+        pb.append_analyzer("calc_rule", (ctx, s) => {
             let result = new Map()
             const runes = ctx.get_enum("lv_runes")
             let rune_map = new Object()
@@ -89,11 +89,12 @@ export let skb_baba_rules = {
                 }
             }
             return result
-        }
+        })
 
         pb.append_prefilter((ctx, s, pf0) => {
             let ex = pf0(ctx, s)
-            const rule_mod = calculate_rules(ctx, s)
+            const calc_rule = ctx.get_analyzer("calc_rule")
+            const rule_mod = calc_rule(ctx, s)
             const wall_mod = rule_mod.get(101)
             const wall_stop = wall_mod && wall_mod.includes(201)
             if (!wall_stop) {
@@ -106,7 +107,8 @@ export let skb_baba_rules = {
             let [s, e] = se
             let se1 = m0(ctx, se)
             let [s1, e1] = se1
-            const rule_mod = calculate_rules(ctx, s)
+            const calc_rule = ctx.get_analyzer("calc_rule")
+            const rule_mod = calc_rule(ctx, s)
             const box_mod = rule_mod.get(102)
             const box_push = box_mod && box_mod.includes(202)
             if (!box_push) {

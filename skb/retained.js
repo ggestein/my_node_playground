@@ -401,6 +401,14 @@ onKeyup = (evt) => {
 // PG events
 const pg_move_callback = (m, ps, ns, e) => {
     console.log("E", e)
+    const ctx = pg.get_context()
+    const calc_rule = ctx.get_analyzer("calc_rule")
+    console.log("CALC_RULE", calc_rule)
+    console.log("NS", ns)
+    if (calc_rule && ns) {
+        const rule = calc_rule(ctx, ns)
+        console.log("RULE", rule)
+    }
     let face = -1
     if (ns !== undefined) {
         if (ns.player.x == ps.player.x) {
