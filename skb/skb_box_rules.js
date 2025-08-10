@@ -27,7 +27,18 @@ export let skb_box_rules = {
                         ex.push({wall: true})
                     }
                 }
-                points.push([bx, by])
+            }
+            for (let k0 in boxes) {
+                const v0 = boxes[k0]
+                for (let k1 in boxes) {
+                    const v1 = boxes[k1]
+                    if (k0 === k1) {
+                        continue
+                    }
+                    if (v0.x === v1.x && v0.y === v1.y) {
+                        ex.push({})
+                    }
+                }
             }
             return ex
         })
