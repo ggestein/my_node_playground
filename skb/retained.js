@@ -257,18 +257,15 @@ const setup_current_level = () => {
                 if (box_id === k) {
                     const rune_id = c.g("rune_id")
                     tex = rune_texture_is
+                    is_rune = true
                     if (rune_id == 101) {
                         tex = rune_texture_wall
-                        is_rune = true
                     } else if (rune_id == 102) {
                         tex = rune_texture_box
-                        is_rune = true
                     } else if (rune_id == 201) {
                         tex = rune_texture_stop
-                        is_rune = true
                     } else if (rune_id == 202) {
                         tex = rune_texture_push
-                        is_rune = true
                     }
                 }
             }
