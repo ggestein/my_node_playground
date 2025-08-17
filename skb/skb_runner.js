@@ -1,4 +1,5 @@
 import PB from "./lib/pb.js"
+import PB_AUX from "./lib/pb_aux.js"
 import {lv1} from "./levels/lv1.js"
 import {lv2} from "./levels/lv2.js"
 import {lv3} from "./levels/lv3.js"
@@ -59,6 +60,9 @@ let pb = new PB()
 lvs[lvidx].build(pb)
 let p = pb.build()
 l("SUCCESS TO BUILD")
+const bp_aux = new PB_AUX(p)
+const [sidr, sid] = p.parse_situation_id(lvs[lvidx].start)
+bp_aux.sample_island_graph(sid)
 let pg = null
 let sd = new SD(ctx, canvas.width, canvas.height)
 let win = false

@@ -8,3 +8,6 @@
     2. move event emit
     3. BigInt for situation id(OK)
     4. explicit new/append for enum and struct
+
+# PAUSED
+restart plan: complete pb_aux.js
