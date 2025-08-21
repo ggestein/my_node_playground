@@ -1,0 +1,3 @@
+* TODO Complete PB_AUX[0%]
+- [ ] sample island from a start situation
+- [ ] gradual path finding
